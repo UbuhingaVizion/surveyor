@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.provider.MediaStore;
 
 import androidx.test.espresso.intent.ActivityResultFunction;
 import androidx.test.espresso.intent.rule.IntentsTestRule;
@@ -36,8 +37,8 @@ import static androidx.test.espresso.action.ViewActions.pressBack;
 import static androidx.test.espresso.action.ViewActions.typeText;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.intent.Intents.intending;
+import static androidx.test.espresso.intent.matcher.IntentMatchers.hasAction;
 import static androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent;
-import static androidx.test.espresso.intent.matcher.IntentMatchers.toPackage;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.isRoot;
 import static androidx.test.espresso.matcher.ViewMatchers.withClassName;
@@ -220,7 +221,7 @@ public class RunActivityTest extends BaseApplicationTest {
         final int audioResId = io.rapidpro.surveyor.test.R.raw.capture_audio;
         final Context context = getInstrumentation().getContext();
 
-        ActivityResultFunction mockCamera = new ActivityResultFunction() {
+        ActivityResultFunction mockImageCapture = new ActivityResultFunction() {
             @Override
             public Instrumentation.ActivityResult apply(Intent intent) {
                 Logger.d("Handling mocked image capture intent");
@@ -244,10 +245,7 @@ public class RunActivityTest extends BaseApplicationTest {
             }
         };
 
-        intending(toPackage("com.android.camera")).respondWithFunction(mockCamera);
-        intending(toPackage("com.android.camera2")).respondWithFunction(mockCamera);
-
-        intending(hasComponent(CaptureVideoActivity.class.getName())).respondWithFunction(new ActivityResultFunction() {
+        ActivityResultFunction mockVideoCapture = new ActivityResultFunction() {
             @Override
             public Instrumentation.ActivityResult apply(Intent intent) {
                 Logger.d("Handling mocked video capture intent");
@@ -264,7 +262,10 @@ public class RunActivityTest extends BaseApplicationTest {
                 Intent resultData = new Intent();
                 return new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData);
             }
-        });
+        };
+
+        intending(hasAction(MediaStore.ACTION_IMAGE_CAPTURE)).respondWithFunction(mockImageCapture);
+        intending(hasAction(MediaStore.ACTION_VIDEO_CAPTURE)).respondWithFunction(mockVideoCapture);
 
         intending(hasComponent(CaptureAudioActivity.class.getName())).respondWithFunction(new ActivityResultFunction() {
             @Override

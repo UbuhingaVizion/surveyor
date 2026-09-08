@@ -57,7 +57,6 @@
     <string name="permission_camera">We need permission to access your camera in order to collect photos and videos.</string>
     <string name="permission_record">We need permission to record audio to in order to collect audio recordings.</string>
     <string name="permission_location">We need permission to access your location in order to collect GPS data.</string>
-    <string name="permission_storage">We need access to your storage in order to save your surveys that are in progress.</string>
 
     <!-- media capturing -->
     <string name="send_message">Send message</string>

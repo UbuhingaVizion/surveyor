@@ -237,13 +237,39 @@ public class RunActivity extends BaseActivity {
     }
 
     /**
-     * Captures a video from the camera
+     * Captures a video using the system camera app
      */
     private void captureVideo() {
-        Intent intent = new Intent(this, CaptureVideoActivity.class);
-        intent.putExtra(SurveyorIntent.EXTRA_MEDIA_FILE, getVideoOutput().getAbsolutePath());
-        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        startActivityForResult(intent, RESULT_VIDEO);
+        Permiso.getInstance().requestPermissions(new Permiso.IOnPermissionResult() {
+            @Override
+            @SuppressWarnings("ResourceType")
+            public void onPermissionResult(Permiso.ResultSet resultSet) {
+                if (resultSet.areAllPermissionsGranted()) {
+                    Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+                    ComponentName cameraPkg = intent.resolveActivity(getPackageManager());
+
+                    if (cameraPkg == null) {
+                        handleProblem("Can't find camera device", null);
+                        return;
+                    }
+                    Logger.d("Camera package is " + cameraPkg.toString());
+
+                    File videoOutput = getVideoOutput();
+                    if (videoOutput.exists()) {
+                        videoOutput.delete();
+                    }
+                    intent.putExtra(MediaStore.EXTRA_OUTPUT, getSurveyor().getUriForFile(videoOutput));
+                    intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                    startActivityForResult(intent, RESULT_VIDEO);
+                }
+            }
+
+            @Override
+            public void onRationaleRequested(Permiso.IOnRationaleProvided callback, String... permissions) {
+                RunActivity.this.showRationaleDialog(R.string.permission_camera, callback);
+            }
+
+        }, Manifest.permission.CAMERA);
     }
 
     /**
@@ -612,19 +638,14 @@ public class RunActivity extends BaseActivity {
         intent.setAction(Intent.ACTION_VIEW);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
-        switch (mediaType) {
-            case R.string.media_image:
-                intent.setDataAndType(Uri.parse(url), "image/*");
-                break;
-            case R.string.media_video:
-                intent.setDataAndType(Uri.parse(url), "video/*");
-                break;
-            case R.string.media_audio:
-                intent.setDataAndType(Uri.parse(url), "audio/*");
-                break;
-            case R.string.media_location:
-                intent.setDataAndType(Uri.parse(url), null);
-                break;
+        if (mediaType == R.string.media_image) {
+            intent.setDataAndType(Uri.parse(url), "image/*");
+        } else if (mediaType == R.string.media_video) {
+            intent.setDataAndType(Uri.parse(url), "video/*");
+        } else if (mediaType == R.string.media_audio) {
+            intent.setDataAndType(Uri.parse(url), "audio/*");
+        } else if (mediaType == R.string.media_location) {
+            intent.setDataAndType(Uri.parse(url), null);
         }
 
         startActivity(intent);

@@ -16,6 +16,7 @@ import com.vdurmont.semver4j.Semver;
 import java.text.NumberFormat;
 import java.util.List;
 
+import io.rapidpro.surveyor.BuildConfig;
 import io.rapidpro.surveyor.Logger;
 import io.rapidpro.surveyor.R;
 import io.rapidpro.surveyor.SurveyorIntent;
@@ -74,9 +75,9 @@ public class OrgActivity extends BaseSubmissionsActivity implements FlowListFrag
             @Override
             public void onConfirm() {
                 try {
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=io.rapidpro.surveyor")));
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + BuildConfig.APPLICATION_ID)));
                 } catch (android.content.ActivityNotFoundException e) {
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=io.rapidpro.surveyor")));
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + BuildConfig.APPLICATION_ID)));
                 }
             }
         });
