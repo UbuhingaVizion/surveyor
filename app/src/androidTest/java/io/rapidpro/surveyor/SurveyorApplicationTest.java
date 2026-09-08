@@ -16,8 +16,8 @@ public class SurveyorApplicationTest extends BaseApplicationTest {
     public void getUriFromFile() throws IOException {
         SurveyorApplication app = getSurveyor();
 
-        assertThat(getSurveyor().getUriForFile(new File(app.getUserDirectory(), "test.x")).toString(), is("content://io.rapidpro.surveyor.provider/shared/test.x"));
-        assertThat(getSurveyor().getUriForFile(new File(app.getSubmissionsDirectory(), "test.x")).toString(), is("content://io.rapidpro.surveyor.provider/shared/test_submissions/test.x"));
-        assertThat(getSurveyor().getUriForFile(new File(app.getExternalCacheDir(), "test.x")).toString(), is("content://io.rapidpro.surveyor.provider/cache/test.x"));
+        assertThat(getSurveyor().getUriForFile(new File(app.getUserDirectory(), "test.x")).toString(), is("content://com.ubuviz.surveyor.provider/shared/test.x"));
+        assertThat(getSurveyor().getUriForFile(new File(app.getSubmissionsDirectory(), "test.x")).toString(), is("content://com.ubuviz.surveyor.provider/shared/test_submissions/test.x"));
+        assertThat(getSurveyor().getUriForFile(new File(app.getExternalCacheDir(), "test.x")).toString(), is("content://com.ubuviz.surveyor.provider/cache/test.x"));
     }
 }

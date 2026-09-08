@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">Surveyor</string>
-    <string name="support_email">support@rapidpro.io</string>
-    <string name="privacy_url">https://app.rapidpro.io/policy/</string>
+    <string name="app_name">UbuViz Surveyor</string>
+    <string name="support_email">info@ubuviz.com</string>
+    <string name="privacy_url">https://ubuviz.com/privacy</string>
 
     <!-- activity titles -->
     <string name="title_activity_login">Sign in</string>
@@ -67,7 +67,7 @@
     <string name="accuracy_meters">Accuracy: %d meters</string>
 
     <!-- preferences -->
-    <string name="pref_default_host">https://app.rapidpro.io</string>
+    <string name="pref_default_host">https://ubuviz.com</string>
     <string name="pref_title_host">RapidPro Host</string>
     <string name="pref_summary_host">The address for your RapidPro installation</string>
 

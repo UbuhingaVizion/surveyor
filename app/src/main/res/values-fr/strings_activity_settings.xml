@@ -1,0 +1,43 @@
+<resources>
+    <string name="title_activity_settings">Paramètres</string>
+
+    <string name="pref_header_general">Général</string>
+
+    <string name="pref_title_social_recommendations">Activer les recommandations sociales</string>
+    <string name="pref_description_social_recommendations">Recommandations de personnes à contacter
+        en fonction de votre historique de messages
+    </string>
+
+    <string name="pref_title_display_name">Nom affiché</string>
+    <string name="pref_default_display_name">Jean Dupont</string>
+
+    <string name="pref_title_add_friends_to_messages">Ajouter des amis aux messages</string>
+    <string-array name="pref_example_list_titles">
+        <item>Toujours</item>
+        <item>Si possible</item>
+        <item>Jamais</item>
+    </string-array>
+
+    <string name="pref_header_data_sync">Données et synchronisation</string>
+
+    <string name="pref_title_sync_frequency">Fréquence de synchronisation</string>
+    <string-array name="pref_sync_frequency_titles">
+        <item>15 minutes</item>
+        <item>30 minutes</item>
+        <item>1 heure</item>
+        <item>3 heures</item>
+        <item>6 heures</item>
+        <item>Jamais</item>
+    </string-array>
+
+    <string name="pref_title_system_sync_settings">Paramètres système de synchronisation</string>
+
+    <string name="pref_header_notifications">Notifications</string>
+
+    <string name="pref_title_new_message_notifications">Notifications de nouveaux messages</string>
+
+    <string name="pref_title_ringtone">Sonnerie</string>
+    <string name="pref_ringtone_silent">Silencieux</string>
+
+    <string name="pref_title_vibrate">Vibration</string>
+</resources>

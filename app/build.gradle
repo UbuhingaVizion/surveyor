@@ -8,7 +8,7 @@ android {
     compileSdk 36
 
     defaultConfig {
-        applicationId "io.rapidpro.surveyor"
+        applicationId "com.ubuviz.surveyor"
         minSdkVersion 21
         targetSdk 36
         versionCode 1401

@@ -7,3 +7,4 @@ app/rapidpro/
 gradle-app.setting
 
 local.properties
+keystore.properties

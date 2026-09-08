@@ -1,0 +1,43 @@
+<resources>
+    <string name="title_activity_settings">Imitunganyirize</string>
+
+    <string name="pref_header_general">Rusangi</string>
+
+    <string name="pref_title_social_recommendations">Emera inyifato rusangi</string>
+    <string name="pref_description_social_recommendations">Inyifato z’abantu bo kuvugana
+        zishingiye ku mateka y’ubutumwa bwawe
+    </string>
+
+    <string name="pref_title_display_name">Izina rirerekwa</string>
+    <string name="pref_default_display_name">Jean Nshimirimana</string>
+
+    <string name="pref_title_add_friends_to_messages">Ongerera inshuti mu butumwa</string>
+    <string-array name="pref_example_list_titles">
+        <item>Ubundi buryo bwose</item>
+        <item>Iyo bishoboka</item>
+        <item>Nta narimwe</item>
+    </string-array>
+
+    <string name="pref_header_data_sync">Amakuru no guhuza</string>
+
+    <string name="pref_title_sync_frequency">Ingana yo guhuza</string>
+    <string-array name="pref_sync_frequency_titles">
+        <item>Iminota 15</item>
+        <item>Iminota 30</item>
+        <item>Isaha 1</item>
+        <item>Amasaha 3</item>
+        <item>Amasaha 6</item>
+        <item>Nta narimwe</item>
+    </string-array>
+
+    <string name="pref_title_system_sync_settings">Imitunganyirize ya sistime yo guhuza</string>
+
+    <string name="pref_header_notifications">Amatohoza</string>
+
+    <string name="pref_title_new_message_notifications">Amatohoza y’ubutumwa bushasha</string>
+
+    <string name="pref_title_ringtone">Induru</string>
+    <string name="pref_ringtone_silent">Icemere</string>
+
+    <string name="pref_title_vibrate">Guhinda</string>
+</resources>
