@@ -59,7 +59,7 @@
     <string name="tap_to_record">Touchez pour enregistrer</string>
     <string name="tap_to_capture">Touchez pour capturer</string>
     <string name="waiting_for_gps">En attente du GPS…</string>
-    <string name="latitude_longitude">Lat : %.3f Long : %.3f</string>
+    <string name="latitude_longitude">Lat : %1$.3f Long : %2$.3f</string>
     <string name="accuracy_meters">Précision : %d mètres</string>
 
     <!-- preferences -->
