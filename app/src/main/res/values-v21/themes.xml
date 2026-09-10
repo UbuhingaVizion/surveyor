@@ -13,5 +13,8 @@
         <item name="android:windowSharedElementEnterTransition">@transition/changebounds_with_arcmotion</item>
         <item name="android:windowSharedElementExitTransition">@transition/changebounds_with_arcmotion</item>
 
+        <!-- system bar colors -->
+        <item name="android:statusBarColor">@color/primary_dark</item>
+        <item name="android:navigationBarColor">@color/primary_darkest</item>
     </style>
 </resources>

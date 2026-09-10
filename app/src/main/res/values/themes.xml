@@ -6,11 +6,13 @@
         <item name="android:windowBackground">@color/background</item>
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryDark">@color/primary_dark</item>
-        <item name="colorAccent">@color/primary_lightest</item>
+        <item name="colorAccent">@color/primary_light</item>
     </style>
 
     <style name="LoginTheme">
         <item name="colorControlNormal">@color/primary_lightest</item>
+        <item name="colorControlActivated">@color/primary_light</item>
+        <item name="colorControlHighlight">@color/primary_background</item>
     </style>
 
     <style name="RapidTheme.FullScreen" parent="@style/RapidTheme.Base">

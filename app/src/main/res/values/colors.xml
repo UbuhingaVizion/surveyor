@@ -1,47 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!--
-      Palette generated from paletton:
-      http://paletton.com/#uid=53B0x0knyhTdHrQjdmlsEcMAt7T
-    -->
-    <color name="background">#eeeeee</color>
+    <!-- UbuViz Corporate Palette (ubuviz.com) -->
+    <color name="background">#F5F7FA</color>
 
-    <color name="primary_background">#bad7e7</color>
-    <color name="primary_lightest">#6d9bb4</color>
-    <color name="primary_light">#FF107DB9</color>
-    <color name="primary">#0c6596</color>
-    <color name="primary_dark">#FF094A6E</color>
-    <color name="primary_darkest">#FF05283B</color>
+    <color name="primary_background">#D9EBFC</color>
+    <color name="primary_lightest">#80BDFD</color>
+    <color name="primary_light">#026CC8</color>
+    <color name="primary">#002B65</color>
+    <color name="primary_dark">#001B44</color>
+    <color name="primary_darkest">#00112C</color>
 
-    <color name="secondary_lightest">#68609A</color>
-    <color name="secondary_light">#443B7B</color>
-    <color name="secondary">#2C2463</color>
-    <color name="secondary_dark">#171047</color>
-    <color name="secondary_darkest">#0A052B</color>
+    <color name="secondary_lightest">#A4B0BE</color>
+    <color name="secondary_light">#747D8C</color>
+    <color name="secondary">#2F3542</color>
+    <color name="secondary_dark">#1E222A</color>
+    <color name="secondary_darkest">#0E1116</color>
 
-    <color name="tertiary_lightest">#B2DFDB</color>
-    <color name="tertiary_light">#56967E</color>
-    <color name="tertiary">#30785D</color>
-    <color name="tertiary_dark">#07452E</color>
-    <color name="tertiary_darkest">#002A1A</color>
+    <color name="tertiary_lightest">#D1E7DD</color>
+    <color name="tertiary_light">#28A745</color>
+    <color name="tertiary">#1E7E34</color>
+    <color name="tertiary_dark">#145523</color>
+    <color name="tertiary_darkest">#0A2C12</color>
 
-    <!-- other widgets -->
-    <color name="light_gray">#b1b1b1</color>
-    <color name="chat_in">#c4ddfb</color>
-    <color name="chat_out">#dddddd</color>
+    <!-- UI widgets and Chat bubbles -->
+    <color name="light_gray">#9AA5B1</color>
+    <color name="chat_in">#E1EFFC</color>
+    <color name="chat_out">#F0F2F5</color>
     <color name="white">#FFFFFF</color>
-    <color name="warning_background">#bc8181</color>
-    <color name="warning">#b93b3b</color>
-    <color name="warning_text">#481313</color>
+    <color name="warning_background">#FCE8E8</color>
+    <color name="warning">#B30000</color>
+    <color name="warning_text">#660000</color>
 
-    <color name="pending_background">#b0c2ae</color>
-    <color name="pending">#6e946a</color>
-    <color name="pending_border">#62865d</color>
-    <color name="pending_button_text">#ebf2ea</color>
-    <color name="pending_text">#2c4b27</color>
+    <!-- Submissions Pending Badge -->
+    <color name="pending_background">#E3EAF3</color>
+    <color name="pending">#026CC8</color>
+    <color name="pending_border">#002B65</color>
+    <color name="pending_button_text">#FFFFFF</color>
+    <color name="pending_text">#002B65</color>
 
-    <color name="recording">#f4f4f4</color>
+    <color name="recording">#F4F4F4</color>
 
 
 </resources>

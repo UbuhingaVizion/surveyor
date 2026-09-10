@@ -63,8 +63,9 @@
     <string name="accuracy_meters">Précision : %d mètres</string>
 
     <!-- preferences -->
-    <string name="pref_title_host">Hôte RapidPro</string>
-    <string name="pref_summary_host">L’adresse de votre installation RapidPro</string>
+    <string name="pref_default_host">https://ubuviz.com</string>
+    <string name="pref_title_host">Hôte UbuViz</string>
+    <string name="pref_summary_host">L’adresse de votre installation UbuViz</string>
 
     <!-- miscellaneous -->
     <string name="yes">Oui</string>

@@ -65,8 +65,9 @@
     <string name="accuracy_meters">Ubutinyuka : %d metero</string>
 
     <!-- preferences -->
-    <string name="pref_title_host">Seriveri ya RapidPro</string>
-    <string name="pref_summary_host">Aderesi ya seriveri yawe ya RapidPro</string>
+    <string name="pref_default_host">https://ubuviz.com</string>
+    <string name="pref_title_host">Seriveri ya UbuViz</string>
+    <string name="pref_summary_host">Aderesi ya seriveri yawe ya UbuViz</string>
 
     <!-- miscellaneous -->
     <string name="yes">Ego</string>

@@ -68,8 +68,8 @@
 
     <!-- preferences -->
     <string name="pref_default_host">https://ubuviz.com</string>
-    <string name="pref_title_host">RapidPro Host</string>
-    <string name="pref_summary_host">The address for your RapidPro installation</string>
+    <string name="pref_title_host">UbuViz Host</string>
+    <string name="pref_summary_host">The address for your UbuViz installation</string>
 
     <!-- miscellaneous -->
     <string name="yes">Yes</string>
