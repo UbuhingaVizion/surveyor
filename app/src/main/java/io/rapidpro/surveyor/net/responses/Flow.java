@@ -1,11 +1,16 @@
 package io.rapidpro.surveyor.net.responses;
 
+import com.google.gson.annotations.SerializedName;
+
 public class Flow {
     private String uuid;
     private String name;
     private String type;
     private boolean archived;
     private int expires;
+
+    @SerializedName("modified_on")
+    private String modifiedOn;
 
     public String getUuid() {
         return uuid;
@@ -25,5 +30,9 @@ public class Flow {
 
     public int getExpires() {
         return expires;
+    }
+
+    public String getModifiedOn() {
+        return modifiedOn;
     }
 }

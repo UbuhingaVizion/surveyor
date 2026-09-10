@@ -91,6 +91,11 @@
     <string name="sync_complete">Submissions sent</string>
     <string name="sync_failed">Could not send submissions</string>
 
+    <!-- asset sync -->
+    <string name="never_updated">Not yet updated</string>
+    <string name="last_updated">Updated %1$s</string>
+    <string name="up_to_date">Up to date</string>
+
     <!-- miscellaneous -->
     <string name="yes">Yes</string>
     <string name="no">No</string>

@@ -88,6 +88,11 @@
     <string name="sync_complete">Réponses envoyées</string>
     <string name="sync_failed">Impossible d’envoyer les réponses</string>
 
+    <!-- asset sync -->
+    <string name="never_updated">Pas encore actualisé</string>
+    <string name="last_updated">Actualisé %1$s</string>
+    <string name="up_to_date">À jour</string>
+
     <!-- miscellaneous -->
     <string name="yes">Oui</string>
     <string name="no">Non</string>

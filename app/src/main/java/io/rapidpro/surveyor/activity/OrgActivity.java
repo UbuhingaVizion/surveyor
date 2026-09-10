@@ -7,13 +7,16 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.format.DateUtils;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.vdurmont.semver4j.Semver;
 
 import java.text.NumberFormat;
+import java.time.Instant;
 import java.util.List;
 
 import io.rapidpro.surveyor.BuildConfig;
@@ -97,6 +100,7 @@ public class OrgActivity extends BaseSubmissionsActivity implements FlowListFrag
         }
 
         setTitle(org.getName());
+        updateLastUpdated();
 
         FlowListAdapter adapter = (FlowListAdapter) getViewCache().getListViewAdapter(android.R.id.list);
         if (adapter != null) {
@@ -131,6 +135,30 @@ public class OrgActivity extends BaseSubmissionsActivity implements FlowListFrag
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Updates the "last updated" indicator with the time this org's assets were last refreshed
+     */
+    private void updateLastUpdated() {
+        TextView view = findViewById(R.id.text_last_updated);
+        if (view == null) {
+            return;
+        }
+
+        String last = org.getLastSynced();
+        if (last == null) {
+            view.setText(R.string.never_updated);
+            return;
+        }
+
+        try {
+            long ms = Instant.parse(last).toEpochMilli();
+            CharSequence relative = DateUtils.getRelativeTimeSpanString(ms, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS);
+            view.setText(getString(R.string.last_updated, relative));
+        } catch (Exception e) {
+            view.setText(R.string.never_updated);
         }
     }
 
@@ -172,6 +200,10 @@ public class OrgActivity extends BaseSubmissionsActivity implements FlowListFrag
             @Override
             public void onComplete() {
                 refresh();
+
+                if (!getOrg().isLastRefreshChanged()) {
+                    Toast.makeText(OrgActivity.this, getString(R.string.up_to_date), Toast.LENGTH_SHORT).show();
+                }
 
                 progressModal.dismiss();
             }

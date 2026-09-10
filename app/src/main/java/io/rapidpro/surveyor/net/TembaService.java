@@ -9,6 +9,7 @@ import com.google.gson.JsonObject;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -32,6 +33,7 @@ import io.rapidpro.surveyor.net.responses.PaginatedResults;
 import io.rapidpro.surveyor.net.responses.TokenResults;
 import io.rapidpro.surveyor.utils.JsonUtils;
 import io.rapidpro.surveyor.utils.RawJson;
+import okhttp3.Cache;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
@@ -47,7 +49,11 @@ public class TembaService {
     private TembaAPI api;
 
     public TembaService(String host) {
-        this.api = createRetrofit(host).create(TembaAPI.class);
+        this(host, null);
+    }
+
+    public TembaService(String host, File cacheDir) {
+        this.api = createRetrofit(host, cacheDir).create(TembaAPI.class);
     }
 
     /**
@@ -57,7 +63,7 @@ public class TembaService {
         return "Token " + token;
     }
 
-    private static Retrofit createRetrofit(String host) {
+    private static Retrofit createRetrofit(String host, File cacheDir) {
 
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
@@ -67,6 +73,11 @@ public class TembaService {
                 .connectTimeout(60, TimeUnit.SECONDS)
                 .writeTimeout(120, TimeUnit.SECONDS)
                 .addInterceptor(new RetryInterceptor(2));
+
+        // disk cache (80 MB) - lets us take advantage of any conditional GET support on the server
+        if (cacheDir != null) {
+            builder.cache(new Cache(cacheDir, 80L * 1024 * 1024));
+        }
 
         // add extra logging for debug mode
         if (BuildConfig.DEBUG) {
@@ -175,12 +186,20 @@ public class TembaService {
      * @param flows the list of flows
      */
     public List<RawJson> getDefinitions(final String token, final List<Flow> flows) throws TembaException {
-        // gather up flow UUIDs
-        final List<String> flowUUIDs = new ArrayList<>(flows.size());
+        List<String> flowUUIDs = new ArrayList<>(flows.size());
         for (Flow flow : flows) {
             flowUUIDs.add(flow.getUuid());
         }
+        return getDefinitionsForUuids(token, flowUUIDs);
+    }
 
+    /**
+     * Gets full definitions for the given flow UUIDs (used for incremental sync)
+     *
+     * @param token     the authentication token
+     * @param flowUUIDs the flow UUIDs to fetch
+     */
+    public List<RawJson> getDefinitionsForUuids(String token, List<String> flowUUIDs) throws TembaException {
         try {
             Response<Definitions> response = api.getDefinitions(asAuth(token), flowUUIDs, "none").execute();
             checkResponse(response);

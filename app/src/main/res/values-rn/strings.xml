@@ -90,6 +90,11 @@
     <string name="sync_complete">Ibisubizo byoherejwe</string>
     <string name="sync_failed">Ntibishobotse kohereza ibisubizo</string>
 
+    <!-- asset sync -->
+    <string name="never_updated">Ntivugururwa na rimwe</string>
+    <string name="last_updated">Byavuguruwe %1$s</string>
+    <string name="up_to_date">Nta co cahindutse</string>
+
     <!-- miscellaneous -->
     <string name="yes">Ego</string>
     <string name="no">Oya</string>

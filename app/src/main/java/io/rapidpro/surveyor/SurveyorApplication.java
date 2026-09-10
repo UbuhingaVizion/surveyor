@@ -66,7 +66,7 @@ public class SurveyorApplication extends Application {
 
         s_this = this;
 
-        tembaService = new TembaService(getTembaHost());
+        tembaService = new TembaService(getTembaHost(), getCacheDir());
 
         try {
             orgService = new OrgService(getOrgsDirectory());
@@ -168,7 +168,7 @@ public class SurveyorApplication extends Application {
         }
         SyncScheduler.cancelAll(this);
 
-        tembaService = new TembaService(newHost);
+        tembaService = new TembaService(newHost, getCacheDir());
     }
 
     /**

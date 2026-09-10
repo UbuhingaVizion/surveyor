@@ -8,6 +8,7 @@ import io.rapidpro.surveyor.data.Flow;
 import io.rapidpro.surveyor.net.responses.Boundary;
 import io.rapidpro.surveyor.net.responses.Field;
 import io.rapidpro.surveyor.net.responses.Group;
+import io.rapidpro.surveyor.utils.JsonUtils;
 import io.rapidpro.surveyor.utils.RawJson;
 
 public class OrgAssets {
@@ -30,6 +31,19 @@ public class OrgAssets {
      * Constructs a new set of org assets from the data returned from the Temba API
      */
     public static OrgAssets fromTemba(List<Field> fields, List<Group> groups, List<Boundary> boundaries, List<RawJson> flows) {
+        List<LocationAsset> locationAssets = new ArrayList<>();
+        if (boundaries.size() > 0) {
+            LocationAsset location = LocationAsset.fromTemba(boundaries);
+            locationAssets = Collections.singletonList(location);
+        }
+        return fromTembaReusingLocations(fields, groups, locationAssets, flows);
+    }
+
+    /**
+     * Constructs a new set of org assets, reusing existing location assets (used when boundaries
+     * haven't been re-fetched because they are still fresh)
+     */
+    public static OrgAssets fromTembaReusingLocations(List<Field> fields, List<Group> groups, List<LocationAsset> locations, List<RawJson> flows) {
         List<FieldAsset> fieldAssets = new ArrayList<>(fields.size());
         for (Field field : fields) {
             fieldAssets.add(FieldAsset.fromTemba(field));
@@ -40,13 +54,32 @@ public class OrgAssets {
             groupAssets.add(GroupAsset.fromTemba(group));
         }
 
-        List<LocationAsset> locationAssets = new ArrayList<>();
-        if (boundaries.size() > 0) {
-            LocationAsset location = LocationAsset.fromTemba(boundaries);
-            locationAssets = Collections.singletonList(location);
-        }
+        return new OrgAssets(fieldAssets, groupAssets, locations, flows);
+    }
 
-        return new OrgAssets(fieldAssets, groupAssets, locationAssets, flows);
+    /**
+     * Parses org assets previously serialized with {@link #toJson()}
+     */
+    public static OrgAssets fromJson(String json) {
+        return JsonUtils.unmarshal(json, OrgAssets.class);
+    }
+
+    public String toJson() {
+        return JsonUtils.marshal(this);
+    }
+
+    /**
+     * Gets the raw flow definitions
+     */
+    public List<RawJson> getFlowDefinitions() {
+        return flows;
+    }
+
+    /**
+     * Gets the location assets (may be empty)
+     */
+    public List<LocationAsset> getLocations() {
+        return locations != null ? locations : Collections.<LocationAsset>emptyList();
     }
 
     /**

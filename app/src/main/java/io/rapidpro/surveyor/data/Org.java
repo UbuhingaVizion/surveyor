@@ -7,8 +7,14 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import io.rapidpro.surveyor.Logger;
 import io.rapidpro.surveyor.SurveyorApplication;
@@ -37,6 +43,11 @@ public class Org {
      */
     private static final String FLOWS_FILE = "flows.json";
 
+    /**
+     * How long admin boundaries are considered fresh (they rarely change)
+     */
+    private static final long BOUNDARIES_TTL_DAYS = 2;
+
     private String token;
 
     private String name;
@@ -57,9 +68,17 @@ public class Org {
 
     private String legacySubmissionsDirectory;
 
+    @SerializedName("last_synced")
+    private String lastSynced;
+
+    @SerializedName("last_boundaries_synced")
+    private String lastBoundariesSynced;
+
     private transient File directory;
 
     private transient List<Flow> flows;
+
+    private transient boolean lastRefreshChanged;
 
     /**
      * Creates an new empty org
@@ -182,6 +201,27 @@ public class Org {
         this.legacySubmissionsDirectory = legacySubmissionsDirectory;
     }
 
+    /**
+     * When this org's assets were last refreshed (ISO instant, may be null)
+     */
+    public String getLastSynced() {
+        return lastSynced;
+    }
+
+    /**
+     * When this org's admin boundaries were last refreshed (ISO instant, may be null)
+     */
+    public String getLastBoundariesSynced() {
+        return lastBoundariesSynced;
+    }
+
+    /**
+     * Whether the most recent refresh changed anything
+     */
+    public boolean isLastRefreshChanged() {
+        return lastRefreshChanged;
+    }
+
     public List<Flow> getFlows() {
         return flows;
     }
@@ -250,44 +290,137 @@ public class Org {
     }
 
     private void refreshAssets(RefreshProgress progress) throws TembaException, IOException {
-        List<Field> fields = SurveyorApplication.get().getTembaService().getFields(getToken());
+        TembaService svc = SurveyorApplication.get().getTembaService();
 
-        progress.reportProgress(20);
+        List<Field> fields = svc.getFields(getToken());
 
-        List<Group> groups = SurveyorApplication.get().getTembaService().getGroups(getToken());
+        if (progress != null) {
+            progress.reportProgress(20);
+        }
 
-        progress.reportProgress(30);
+        List<Group> groups = svc.getGroups(getToken());
 
-        List<io.rapidpro.surveyor.net.responses.Flow> flows = SurveyorApplication.get().getTembaService().getFlows(getToken());
+        if (progress != null) {
+            progress.reportProgress(30);
+        }
 
-        progress.reportProgress(40);
+        List<io.rapidpro.surveyor.net.responses.Flow> serverFlows = svc.getFlows(getToken());
 
-        List<RawJson> definitions = SurveyorApplication.get().getTembaService().getDefinitions(getToken(), flows);
+        Map<String, String> serverModified = new HashMap<>();
+        for (io.rapidpro.surveyor.net.responses.Flow flow : serverFlows) {
+            serverModified.put(flow.getUuid(), flow.getModifiedOn());
+        }
 
-        progress.reportProgress(60);
+        if (progress != null) {
+            progress.reportProgress(40);
+        }
 
-        List<Boundary> boundaries = SurveyorApplication.get().getTembaService().getBoundaries(getToken());
+        // work out what actually changed so we only download changed flow definitions
+        AssetDiff diff = AssetDiff.compute(serverModified, this.flows);
 
-        progress.reportProgress(70);
+        OrgAssets existing = hasAssets() ? OrgAssets.fromJson(getAssets()) : null;
 
-        OrgAssets assets = OrgAssets.fromTemba(fields, groups, boundaries, definitions);
-        String assetsJSON = JsonUtils.marshal(assets);
+        List<RawJson> updated = new ArrayList<>();
+        if (!diff.uuidsToDownload().isEmpty()) {
+            updated = svc.getDefinitionsForUuids(getToken(), new ArrayList<>(diff.uuidsToDownload()));
+        }
 
-        FileUtils.writeStringToFile(new File(directory, ASSETS_FILE), assetsJSON);
+        if (progress != null) {
+            progress.reportProgress(60);
+        }
 
-        progress.reportProgress(80);
+        // keep unchanged definitions, replace changed/new, drop removed
+        List<RawJson> merged = mergeFlowDefinitions(existing, updated, diff.removed);
 
-        // update the flow summaries
+        // boundaries rarely change - only re-fetch when missing or stale
+        boolean boundariesDue = existing == null || boundariesDue();
+        List<Boundary> boundaries = null;
+        if (boundariesDue) {
+            boundaries = svc.getBoundaries(getToken());
+            lastBoundariesSynced = Instant.now().toString();
+        }
+
+        if (progress != null) {
+            progress.reportProgress(70);
+        }
+
+        OrgAssets assets;
+        if (boundaries != null) {
+            assets = OrgAssets.fromTemba(fields, groups, boundaries, merged);
+        } else {
+            assets = OrgAssets.fromTembaReusingLocations(fields, groups, existing.getLocations(), merged);
+        }
+
+        FileUtils.writeStringToFile(new File(directory, ASSETS_FILE), assets.toJson());
+
+        if (progress != null) {
+            progress.reportProgress(80);
+        }
+
+        // rebuild the local flow summaries, recording modified_on for future diffing
+        List<Flow> summaries = assets.getFlows();
+        for (Flow summary : summaries) {
+            summary.setModifiedOn(serverModified.get(summary.getUuid()));
+        }
+
         this.flows.clear();
-        this.flows.addAll(assets.getFlows());
+        this.flows.addAll(summaries);
+        FileUtils.writeStringToFile(new File(directory, FLOWS_FILE), JsonUtils.marshal(this.flows));
 
-        // and write that to flows.json as well
-        String summariesJSON = JsonUtils.marshal(this.flows);
-        FileUtils.writeStringToFile(new File(directory, FLOWS_FILE), summariesJSON);
+        lastSynced = Instant.now().toString();
+        lastRefreshChanged = diff.hasChanges() || boundariesDue;
+        save();
 
-        progress.reportProgress(100);
+        if (progress != null) {
+            progress.reportProgress(100);
+        }
 
-        Logger.d("Refreshed assets for org " + getUuid() + " (flows=" + flows.size() + ", fields=" + fields.size() + ", groups=" + groups.size() + ")");
+        Logger.d("Refreshed assets for org " + getUuid() + " (added=" + diff.added.size() + ", changed=" + diff.changed.size() + ", removed=" + diff.removed.size() + ", fields=" + fields.size() + ", groups=" + groups.size() + ")");
+    }
+
+    /**
+     * Merges existing flow definitions with updated ones, dropping removed flows
+     */
+    private List<RawJson> mergeFlowDefinitions(OrgAssets existing, List<RawJson> updated, Set<String> removed) {
+        Map<String, RawJson> byUuid = new LinkedHashMap<>();
+
+        if (existing != null) {
+            for (RawJson definition : existing.getFlowDefinitions()) {
+                String uuid = flowUuid(definition);
+                if (uuid != null && !removed.contains(uuid)) {
+                    byUuid.put(uuid, definition);
+                }
+            }
+        }
+
+        for (RawJson definition : updated) {
+            String uuid = flowUuid(definition);
+            if (uuid != null) {
+                byUuid.put(uuid, definition);
+            }
+        }
+
+        return new ArrayList<>(byUuid.values());
+    }
+
+    private String flowUuid(RawJson definition) {
+        try {
+            return Flow.extract(definition).getUuid();
+        } catch (Exception e) {
+            Logger.e("Unable to read flow definition uuid", e);
+            return null;
+        }
+    }
+
+    private boolean boundariesDue() {
+        if (lastBoundariesSynced == null) {
+            return true;
+        }
+        try {
+            return Instant.parse(lastBoundariesSynced).plus(BOUNDARIES_TTL_DAYS, ChronoUnit.DAYS).isBefore(Instant.now());
+        } catch (Exception e) {
+            return true;
+        }
     }
 
     public interface RefreshProgress {
