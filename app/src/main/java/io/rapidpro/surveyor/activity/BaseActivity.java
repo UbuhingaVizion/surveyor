@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
@@ -19,6 +20,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.ShareCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -82,10 +86,29 @@ public abstract class BaseActivity extends AppCompatActivity {
         // make new activity come in from right
         overridePendingTransition(R.anim.in_from_right, R.anim.out_to_left);
 
+        applyEdgeToEdgeInsets();
+
         // if we're on an activity that requires a logged in user, and we aren't, redirect to login activity
         if (requireLogin() && !isLoggedIn()) {
             logout();
         }
+    }
+
+    /**
+     * Keeps content clear of the system bars. On Android 15/16 edge-to-edge is enforced and the
+     * manifest opt-out is ignored, so we apply the system-bar insets as padding ourselves.
+     */
+    private void applyEdgeToEdgeInsets() {
+        final View content = findViewById(android.R.id.content);
+        if (content == null) {
+            return;
+        }
+
+        ViewCompat.setOnApplyWindowInsetsListener(content, (view, windowInsets) -> {
+            Insets bars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            view.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+            return windowInsets;
+        });
     }
 
     /**

@@ -89,7 +89,7 @@ public final class SyncNotifier {
         PendingIntent pending = PendingIntent.getActivity(ctx, 0, intent, flags);
 
         return new NotificationCompat.Builder(ctx, CHANNEL_ID)
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.ic_stat_sync)
                 .setContentIntent(pending)
                 .setPriority(NotificationCompat.PRIORITY_LOW);
     }
