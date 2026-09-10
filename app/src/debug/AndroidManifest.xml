@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+      Debug-only overlay.
+
+      Instrumented tests run against local cleartext mock HTTP servers (MockWebServer),
+      and WebView (unlike OkHttp) enforces the platform cleartext policy on API 28+.
+      Allow cleartext here so tests can load http://localhost. Release builds do NOT
+      include this overlay and remain HTTPS-only.
+    -->
+    <application android:usesCleartextTraffic="true" />
+
+</manifest>
