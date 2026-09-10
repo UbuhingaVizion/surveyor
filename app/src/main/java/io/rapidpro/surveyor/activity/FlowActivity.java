@@ -62,10 +62,8 @@ public class FlowActivity extends BaseSubmissionsActivity {
         cache.setText(R.id.text_flow_questions, nf.format(flow.getQuestionCount()) + questionString);
         cache.setText(R.id.text_flow_revision, "(v" + nf.format(flow.getRevision()) + ")");
 
-        int pending = getSurveyor().getSubmissionService().getCompletedCount(org, flow);
-
-        cache.setVisible(R.id.container_pending, pending > 0);
-        cache.setButtonText(R.id.button_pending, nf.format(pending));
+        // count pending submissions off the main thread (filesystem traversal)
+        updatePendingCountAsync(() -> getSurveyor().getSubmissionService().getCompletedCount(org, flow));
     }
 
     public void onActionStart(View view) {

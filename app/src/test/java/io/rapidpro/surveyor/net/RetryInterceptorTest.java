@@ -120,7 +120,37 @@ public class RetryInterceptorTest {
         try (Response response = client.newCall(request).execute()) {
             assertEquals(500, response.code());
         }
-        // 5xx is handled by the worker's backoff, not the interceptor
+        // 500 is handled by the worker's backoff, not the interceptor
+        assertEquals(1, server.getRequestCount());
+    }
+
+    @Test
+    public void retriesGetOnServiceUnavailable() throws IOException {
+        server.enqueue(new MockResponse().setResponseCode(503).setBody("unavailable"));
+        server.enqueue(new MockResponse().setResponseCode(200).setBody("ok"));
+
+        Request request = new Request.Builder().url(server.url("/x")).build();
+
+        try (Response response = client.newCall(request).execute()) {
+            assertEquals(200, response.code());
+        }
+        assertEquals(2, server.getRequestCount());
+    }
+
+    @Test
+    public void doesNotRetryServiceUnavailableOnPost() throws IOException {
+        server.enqueue(new MockResponse().setResponseCode(503).setBody("unavailable"));
+        server.enqueue(new MockResponse().setResponseCode(200).setBody("ok"));
+
+        Request request = new Request.Builder()
+                .url(server.url("/x"))
+                .post(RequestBody.create("hi", MediaType.get("text/plain")))
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            assertEquals(503, response.code());
+        }
+        // submit POSTs must not be retried here (worker/backoff handles resume)
         assertEquals(1, server.getRequestCount());
     }
 }

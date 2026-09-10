@@ -16,7 +16,6 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.vdurmont.semver4j.Semver;
 
-import java.text.NumberFormat;
 import java.time.Instant;
 import java.util.List;
 
@@ -32,7 +31,6 @@ import io.rapidpro.surveyor.engine.Engine;
 import io.rapidpro.surveyor.fragment.FlowListFragment;
 import io.rapidpro.surveyor.task.RefreshOrgTask;
 import io.rapidpro.surveyor.ui.BlockingProgress;
-import io.rapidpro.surveyor.ui.ViewCache;
 
 /**
  * Home screen for an org - shows available flows and pending submissions
@@ -108,11 +106,8 @@ public class OrgActivity extends BaseSubmissionsActivity implements FlowListFrag
             adapter.notifyDataSetChanged();
         }
 
-        int pending = getSurveyor().getSubmissionService().getCompletedCount(getOrg());
-
-        ViewCache cache = getViewCache();
-        cache.setVisible(R.id.container_pending, pending > 0);
-        cache.setButtonText(R.id.button_pending, NumberFormat.getInstance().format(pending));
+        // count pending submissions off the main thread (filesystem traversal)
+        updatePendingCountAsync(() -> getSurveyor().getSubmissionService().getCompletedCount(getOrg()));
 
         if (confirmRefreshDialog == null) {
             if (!org.hasAssets()) {

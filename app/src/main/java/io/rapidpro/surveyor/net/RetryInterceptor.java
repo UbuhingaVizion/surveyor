@@ -36,7 +36,17 @@ public class RetryInterceptor implements Interceptor {
 
         for (int attempt = 0; attempt <= maxRetries; attempt++) {
             try {
-                return chain.proceed(request);
+                Response response = chain.proceed(request);
+
+                // transient gateway errors from a restarting proxy/mailroom are worth retrying
+                if (retryable && isTransientServerError(response.code()) && attempt < maxRetries) {
+                    response.close();
+                    sleepBackoff(attempt);
+                    continue;
+                }
+
+                return response;
+
             } catch (IOException e) {
                 lastException = e;
 
@@ -44,16 +54,20 @@ public class RetryInterceptor implements Interceptor {
                     throw e;
                 }
 
-                try {
-                    Thread.sleep(initialBackoffMs * (1L << attempt));
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();
-                    throw e;
-                }
+                sleepBackoff(attempt);
             }
         }
 
         throw lastException != null ? lastException : new IOException("Request failed");
+    }
+
+    private void sleepBackoff(int attempt) throws IOException {
+        try {
+            Thread.sleep(initialBackoffMs * (1L << attempt));
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Interrupted during retry backoff", ie);
+        }
     }
 
     private boolean isRetryable(Request request) {
@@ -62,5 +76,9 @@ public class RetryInterceptor implements Interceptor {
             return true;
         }
         return request.body() instanceof MultipartBody;
+    }
+
+    private boolean isTransientServerError(int code) {
+        return code == 502 || code == 503 || code == 504;
     }
 }

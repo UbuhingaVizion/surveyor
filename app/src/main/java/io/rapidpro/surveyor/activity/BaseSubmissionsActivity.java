@@ -12,11 +12,16 @@ import android.widget.Toast;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
+import java.text.NumberFormat;
 import java.util.List;
+import java.util.concurrent.Callable;
 
+import io.rapidpro.surveyor.Logger;
 import io.rapidpro.surveyor.R;
 import io.rapidpro.surveyor.data.Org;
 import io.rapidpro.surveyor.data.Submission;
+import io.rapidpro.surveyor.ui.ViewCache;
+import io.rapidpro.surveyor.utils.AppExecutors;
 import io.rapidpro.surveyor.work.SyncScheduler;
 
 /**
@@ -64,6 +69,27 @@ public abstract class BaseSubmissionsActivity extends BaseActivity {
         if (button != null) {
             button.setEnabled(!syncing);
         }
+    }
+
+    /**
+     * Updates the pending submissions UI from a background thread (avoids main-thread disk I/O)
+     */
+    protected void updatePendingCountAsync(final Callable<Integer> counter) {
+        AppExecutors.io().execute(() -> {
+            final int pending;
+            try {
+                pending = counter.call();
+            } catch (Exception e) {
+                Logger.e("Unable to count pending submissions", e);
+                return;
+            }
+
+            AppExecutors.runOnMain(() -> {
+                ViewCache cache = getViewCache();
+                cache.setVisible(R.id.container_pending, pending > 0);
+                cache.setButtonText(R.id.button_pending, NumberFormat.getInstance().format(pending));
+            });
+        });
     }
 
     /**
