@@ -1,8 +1,12 @@
 package io.rapidpro.surveyor.activity;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
-import android.content.res.Resources;
+import android.Manifest;
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.os.Build;
 import android.view.View;
 import android.widget.Toast;
 
@@ -11,8 +15,7 @@ import java.util.List;
 import io.rapidpro.surveyor.R;
 import io.rapidpro.surveyor.data.Org;
 import io.rapidpro.surveyor.data.Submission;
-import io.rapidpro.surveyor.task.SubmitSubmissionsTask;
-import io.rapidpro.surveyor.ui.BlockingProgress;
+import io.rapidpro.surveyor.work.SyncScheduler;
 
 /**
  * Base for activities that have submissions ((org and flow views)
@@ -28,47 +31,49 @@ public abstract class BaseSubmissionsActivity extends BaseActivity {
         showConfirmDialog(R.string.confirm_send_submissions, new ConfirmationListener() {
             @Override
             public void onConfirm() {
-                doSubmit();
+                // if set to Wi-Fi only but we aren't on an unmetered network, confirm mobile data
+                if (getSurveyor().isSendOverWifiOnly() && !isOnUnmeteredNetwork()) {
+                    showConfirmDialog(R.string.confirm_send_over_mobile, new ConfirmationListener() {
+                        @Override
+                        public void onConfirm() {
+                            doSendNow();
+                        }
+                    });
+                } else {
+                    doSendNow();
+                }
             }
         });
     }
 
+    private void doSendNow() {
+        // Android 13+ needs runtime permission to show sync notifications
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 0);
+        }
+
+        SyncScheduler.sendNow(this);
+
+        Toast.makeText(this, R.string.sending_submissions, Toast.LENGTH_SHORT).show();
+
+        refresh();
+    }
+
     /**
-     * Does the actual invoking of the submissions task
+     * Gets whether the active network is unmetered (e.g. Wi-Fi)
      */
-    private void doSubmit() {
-        final BlockingProgress progressModal = new BlockingProgress(this, R.string.one_moment, R.string.submit_body);
-        progressModal.show();
-
-        final List<Submission> pending = getPendingSubmissions();
-        final Submission[] asArray = pending.toArray(new Submission[0]);
-        final Resources res = getResources();
-
-        SubmitSubmissionsTask task = new SubmitSubmissionsTask(new SubmitSubmissionsTask.Listener() {
-            @Override
-            public void onProgress(int percent) {
-                progressModal.setProgress(percent);
-            }
-
-            @Override
-            public void onComplete(int total) {
-                refresh();
-
-                progressModal.dismiss();
-
-                CharSequence toast = res.getQuantityString(R.plurals.submissions_sent, total, total);
-                Toast.makeText(BaseSubmissionsActivity.this, toast, Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onFailure(int numFailed) {
-                progressModal.dismiss();
-
-                Toast.makeText(BaseSubmissionsActivity.this, getString(R.string.error_submissions_send), Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        task.execute(asArray);
+    private boolean isOnUnmeteredNetwork() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            return false;
+        }
+        Network network = cm.getActiveNetwork();
+        if (network == null) {
+            return false;
+        }
+        NetworkCapabilities caps = cm.getNetworkCapabilities(network);
+        return caps != null && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED);
     }
 
     protected abstract List<Submission> getPendingSubmissions();

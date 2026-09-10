@@ -69,6 +69,27 @@
     <string name="pref_title_host">Seriveri ya UbuViz</string>
     <string name="pref_summary_host">Aderesi ya seriveri yawe ya UbuViz</string>
 
+    <string name="pref_title_send_over">Kohereza ibisubizo ukoresheje</string>
+    <string name="pref_summary_send_over">Wi-Fi gusa ni vyiza kugira ngo utazimiza amakuru</string>
+    <string-array name="send_over_entries">
+        <item>Wi-Fi gusa</item>
+        <item>Wi-Fi canke data ya telefone</item>
+    </string-array>
+    <string-array name="send_over_values">
+        <item>wifi</item>
+        <item>any</item>
+    </string-array>
+
+    <!-- background sync -->
+    <string name="send_now">Ohereza ubu</string>
+    <string name="sending_submissions">Turiko turahereza ibisubizo…</string>
+    <string name="confirm_send_over_mobile">Wagenyeye kohereza kuri Wi-Fi gusa. Kohereza ubu ukoresheje data ya telefone?</string>
+    <string name="sync_channel_name">Guhuza ibisubizo</string>
+    <string name="sync_channel_desc">Kohereza ibisubizo mu nyuma</string>
+    <string name="sync_in_progress">Turiko turahereza ibisubizo…</string>
+    <string name="sync_complete">Ibisubizo byoherejwe</string>
+    <string name="sync_failed">Ntibishobotse kohereza ibisubizo</string>
+
     <!-- miscellaneous -->
     <string name="yes">Ego</string>
     <string name="no">Oya</string>

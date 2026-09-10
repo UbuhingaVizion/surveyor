@@ -57,6 +57,7 @@ import io.rapidpro.surveyor.ui.ViewCache;
 import io.rapidpro.surveyor.utils.ImageUtils;
 import io.rapidpro.surveyor.widget.ChatBubbleView;
 import io.rapidpro.surveyor.widget.IconLinkView;
+import io.rapidpro.surveyor.work.SyncScheduler;
 
 public class RunActivity extends BaseActivity {
 
@@ -594,6 +595,9 @@ public class RunActivity extends BaseActivity {
     public void onActionSave(View view) {
         try {
             submission.complete();
+
+            // queue the submission for background sending
+            SyncScheduler.enqueue(this, getSurveyor().isSendOverWifiOnly());
 
             finish();
         } catch (IOException e) {

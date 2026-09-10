@@ -70,6 +70,26 @@
     <string name="pref_default_host">https://ubuviz.com</string>
     <string name="pref_title_host">UbuViz Host</string>
     <string name="pref_summary_host">The address for your UbuViz installation</string>
+    <string name="pref_title_send_over">Send submissions over</string>
+    <string name="pref_summary_send_over">Wi-Fi only is recommended to save data</string>
+    <string-array name="send_over_entries">
+        <item>Wi-Fi only</item>
+        <item>Wi-Fi or mobile data</item>
+    </string-array>
+    <string-array name="send_over_values">
+        <item>wifi</item>
+        <item>any</item>
+    </string-array>
+
+    <!-- background sync -->
+    <string name="send_now">Send now</string>
+    <string name="sending_submissions">Sending submissions…</string>
+    <string name="confirm_send_over_mobile">You are set to send over Wi-Fi only. Send now using mobile data?</string>
+    <string name="sync_channel_name">Submission sync</string>
+    <string name="sync_channel_desc">Background sending of survey submissions</string>
+    <string name="sync_in_progress">Sending submissions…</string>
+    <string name="sync_complete">Submissions sent</string>
+    <string name="sync_failed">Could not send submissions</string>
 
     <!-- miscellaneous -->
     <string name="yes">Yes</string>

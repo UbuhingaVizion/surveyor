@@ -20,4 +20,13 @@ public interface SurveyorPreferences {
      * UUIDs of the orgs this user has access to
      */
     String AUTH_ORGS = "auth_orgs";
+
+    /**
+     * Whether submissions may be sent over mobile data, or only over Wi-Fi
+     */
+    String SEND_OVER = "send_over";
+
+    String SEND_OVER_WIFI = "wifi";
+
+    String SEND_OVER_ANY = "any";
 }

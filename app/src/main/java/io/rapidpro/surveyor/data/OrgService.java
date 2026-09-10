@@ -1,8 +1,12 @@
 package io.rapidpro.surveyor.data;
 
+import org.apache.commons.io.filefilter.DirectoryFileFilter;
+
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import io.rapidpro.surveyor.Logger;
@@ -56,5 +60,23 @@ public class OrgService {
 
     public void clearCache() {
         cache.clear();
+    }
+
+    /**
+     * Loads all orgs that have been downloaded to this device
+     */
+    public List<Org> getAll() {
+        List<Org> orgs = new ArrayList<>();
+        File[] dirs = rootDir.listFiles((java.io.FileFilter) DirectoryFileFilter.INSTANCE);
+        if (dirs != null) {
+            for (File dir : dirs) {
+                try {
+                    orgs.add(get(dir.getName()));
+                } catch (Exception e) {
+                    Logger.e("Unable to load org " + dir.getName(), e);
+                }
+            }
+        }
+        return orgs;
     }
 }

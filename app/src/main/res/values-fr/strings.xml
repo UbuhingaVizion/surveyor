@@ -67,6 +67,27 @@
     <string name="pref_title_host">Hôte UbuViz</string>
     <string name="pref_summary_host">L’adresse de votre installation UbuViz</string>
 
+    <string name="pref_title_send_over">Envoyer les réponses via</string>
+    <string name="pref_summary_send_over">Wi-Fi uniquement est recommandé pour économiser les données</string>
+    <string-array name="send_over_entries">
+        <item>Wi-Fi uniquement</item>
+        <item>Wi-Fi ou données mobiles</item>
+    </string-array>
+    <string-array name="send_over_values">
+        <item>wifi</item>
+        <item>any</item>
+    </string-array>
+
+    <!-- background sync -->
+    <string name="send_now">Envoyer maintenant</string>
+    <string name="sending_submissions">Envoi des réponses…</string>
+    <string name="confirm_send_over_mobile">Vous êtes réglé sur Wi-Fi uniquement. Envoyer maintenant via les données mobiles ?</string>
+    <string name="sync_channel_name">Synchronisation des réponses</string>
+    <string name="sync_channel_desc">Envoi en arrière-plan des réponses d’enquête</string>
+    <string name="sync_in_progress">Envoi des réponses…</string>
+    <string name="sync_complete">Réponses envoyées</string>
+    <string name="sync_failed">Impossible d’envoyer les réponses</string>
+
     <!-- miscellaneous -->
     <string name="yes">Oui</string>
     <string name="no">Non</string>

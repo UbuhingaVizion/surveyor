@@ -9,6 +9,14 @@
             android:title="@string/pref_title_host"
             android:summary="@string/pref_summary_host"/>
 
+        <ListPreference
+            android:key="send_over"
+            android:defaultValue="wifi"
+            android:title="@string/pref_title_send_over"
+            android:summary="@string/pref_summary_send_over"
+            android:entries="@array/send_over_entries"
+            android:entryValues="@array/send_over_values"/>
+
     </PreferenceCategory>
 
 </PreferenceScreen>

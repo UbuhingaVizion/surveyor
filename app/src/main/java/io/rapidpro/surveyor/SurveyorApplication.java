@@ -19,6 +19,8 @@ import io.rapidpro.surveyor.data.OrgService;
 import io.rapidpro.surveyor.data.SubmissionService;
 import io.rapidpro.surveyor.net.TembaService;
 import io.rapidpro.surveyor.utils.SurveyUtils;
+import io.rapidpro.surveyor.work.SyncNotifier;
+import io.rapidpro.surveyor.work.SyncScheduler;
 
 /**
  * Main application
@@ -72,6 +74,18 @@ public class SurveyorApplication extends Application {
         } catch (IOException e) {
             Logger.e("Unable to create directory based services", e);
         }
+
+        // set up background sync (notifications + schedule any pending submissions)
+        SyncNotifier.createChannels(this);
+        SyncScheduler.enqueue(this, isSendOverWifiOnly());
+    }
+
+    /**
+     * Gets whether submissions should only be sent over Wi-Fi (default) rather than mobile data
+     */
+    public boolean isSendOverWifiOnly() {
+        String value = getPreferences().getString(SurveyorPreferences.SEND_OVER, SurveyorPreferences.SEND_OVER_WIFI);
+        return !SurveyorPreferences.SEND_OVER_ANY.equals(value);
     }
 
     /**
@@ -152,6 +166,7 @@ public class SurveyorApplication extends Application {
         } catch (IOException e) {
             Logger.e("Unable to clear submissions", e);
         }
+        SyncScheduler.cancelAll(this);
 
         tembaService = new TembaService(newHost);
     }

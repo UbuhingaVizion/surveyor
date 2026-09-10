@@ -64,7 +64,9 @@ public class TembaService {
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
                 .readTimeout(60, TimeUnit.SECONDS)
-                .connectTimeout(60, TimeUnit.SECONDS);
+                .connectTimeout(60, TimeUnit.SECONDS)
+                .writeTimeout(120, TimeUnit.SECONDS)
+                .addInterceptor(new RetryInterceptor(2));
 
         // add extra logging for debug mode
         if (BuildConfig.DEBUG) {

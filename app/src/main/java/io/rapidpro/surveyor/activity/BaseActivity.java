@@ -189,6 +189,9 @@ public abstract class BaseActivity extends PermisoActivity {
             Logger.e("Unable to clear submissions", e);
         }
 
+        // stop any scheduled background sync
+        io.rapidpro.surveyor.work.SyncScheduler.cancelAll(this);
+
         Intent intent = new Intent(this, LoginActivity.class);
 
         // clear the activity stack

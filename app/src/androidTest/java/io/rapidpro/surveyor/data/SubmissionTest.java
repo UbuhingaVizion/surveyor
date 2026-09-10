@@ -18,6 +18,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 public class SubmissionTest extends BaseApplicationTest {
     private static final String ORG_UUID = "b2ad9e4d-71f1-4d54-8dd6-f7a94b685d06";
@@ -74,6 +75,57 @@ public class SubmissionTest extends BaseApplicationTest {
         assertThat(body, containsString("image/jpeg:http://uploads.rapidpro.io/0cce52d1.jpg"));
         assertThat(body, containsString("video/mp4:http://uploads.rapidpro.io/6c519989.mp4"));
         assertThat(body, containsString("audio/mp4:http://uploads.rapidpro.io/fce55c47.m4a"));
+    }
+
+    @Test
+    public void resumesUploadAfterSubmitFailure() throws IOException, TembaException, InterruptedException {
+        installOrg(ORG_UUID, io.rapidpro.surveyor.test.R.raw.org1_details, io.rapidpro.surveyor.test.R.raw.org1_flows, io.rapidpro.surveyor.test.R.raw.org1_assets);
+
+        Org org = getSurveyor().getOrgService().get(ORG_UUID);
+        Flow flow = org.getFlow("e54809ba-2f28-439b-b90b-c623eafa05ae");
+
+        File directory = SurveyUtils.mkdir(getSurveyor().getUserDirectory(), "test_submissions", org.getUuid(), flow.getUuid(), "11111111-2222-3333-4444-555555555555");
+        Submission sub = new Submission(org, directory);
+
+        copyResource(R.raw.submission2_events, new File(directory, "events.jsonl"));
+        copyResource(R.raw.submission2_modifiers, new File(directory, "modifiers.jsonl"));
+        copyResource(R.raw.submission2_session, new File(directory, "session.json"));
+        copyResource(R.raw.capture_image, new File(sub.getMediaDirectory(), "2e4fe2fc-470d-4009-9b51-f93ae5b59199.jpg"));
+        copyResource(R.raw.capture_audio, new File(sub.getMediaDirectory(), "ed8f2572-ed00-47f4-9011-3bbb8a6cc70f.m4a"));
+        sub.complete();
+
+        // First attempt: both media upload fine, but the submit fails
+        mockServerResponse("{\"location\":\"http://uploads.rapidpro.io/0cce52d1.jpg\"}", "application/json", 200);
+        mockServerResponse("{\"location\":\"http://uploads.rapidpro.io/fce55c47.m4a\"}", "application/json", 200);
+        mockServerResponse("{}", "application/json", 500);
+
+        try {
+            sub.uploadAndSubmit();
+            fail("expected submit failure");
+        } catch (TembaException expected) {
+        }
+
+        // the two media uploads should have been recorded so they aren't repeated
+        UploadState state = sub.getUploadState();
+        assertThat(state.getMedia().size(), is(2));
+        assertThat(state.isSubmitted(), is(false));
+
+        // drain the first attempt's requests (2 media + 1 failed submit)
+        assertThat(mockServer.takeRequest().getRequestLine(), is("POST /api/v2/media.json HTTP/1.1"));
+        assertThat(mockServer.takeRequest().getRequestLine(), is("POST /api/v2/media.json HTTP/1.1"));
+        assertThat(mockServer.takeRequest().getRequestLine(), is("POST /mr/surveyor/submit HTTP/1.1"));
+
+        // Second attempt: only the submit should be sent (media already uploaded)
+        mockServerResponse("{\"msg\":\"thanks\"}", "application/json", 200);
+
+        sub.uploadAndSubmit();
+
+        RecordedRequest retry = mockServer.takeRequest();
+        assertThat(retry.getRequestLine(), is("POST /mr/surveyor/submit HTTP/1.1"));
+
+        // exactly 4 requests in total - no media re-uploaded on the retry
+        assertThat(mockServer.getRequestCount(), is(4));
+        assertThat(directory.exists(), is(false));
     }
 
     @Test
