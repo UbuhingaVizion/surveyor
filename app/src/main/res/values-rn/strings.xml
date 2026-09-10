@@ -119,6 +119,7 @@
     <string name="stop">Hagarika kwandika</string>
     <string name="record">Andika</string>
     <string name="camera_error">Kamera ifise ikibazo</string>
+    <string name="audio_error">Ikibazo mu kwandika ijwi</string>
     <string name="description_info">Ibisobanuro</string>
 
     <string name="tap_to_stop">Kwandika. Kanda uhagarike.</string>

@@ -7,11 +7,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -224,17 +222,15 @@ public class TembaService {
         String baseName = FilenameUtils.getBaseName(uriString);
         String extension = FilenameUtils.getExtension(uriString);
 
-        // build multipart request
+        // build multipart request - stream the media from its content URI (no heap buffering)
         Map<String, RequestBody> map = new HashMap<>();
-        map.put("extension", RequestBody.create(MediaType.parse("text/plain"), extension));
+        map.put("extension", RequestBody.create(extension, MediaType.get("text/plain")));
+
+        RequestBody fileBody = ContentUriRequestBody.forUri(
+                SurveyorApplication.get().getContentResolver(), uri, MediaType.get("multipart/form-data"));
+        map.put("media_file\"; filename=\"" + baseName, fileBody);
 
         try {
-            InputStream stream = SurveyorApplication.get().getContentResolver().openInputStream(uri);
-            byte[] bytes = IOUtils.toByteArray(stream);
-
-            RequestBody fileBody = RequestBody.create(MediaType.parse("multipart/form-data"), bytes);
-            map.put("media_file\"; filename=\"" + baseName, fileBody);
-
             Response<JsonObject> result = api.uploadMedia(asAuth(token), map).execute();
             checkResponse(result);
 

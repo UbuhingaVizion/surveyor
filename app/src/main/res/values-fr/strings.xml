@@ -125,6 +125,7 @@
     <string name="stop">Arrêter l’enregistrement</string>
     <string name="record">Enregistrer</string>
     <string name="camera_error">Erreur de caméra</string>
+    <string name="audio_error">Erreur d’enregistrement</string>
     <string name="description_info">Description</string>
 
     <string name="tap_to_stop">Enregistrement. Touchez pour arrêter.</string>

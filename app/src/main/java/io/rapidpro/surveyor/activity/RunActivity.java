@@ -1,6 +1,7 @@
 package io.rapidpro.surveyor.activity;
 
 import android.Manifest;
+import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -225,7 +226,12 @@ public class RunActivity extends BaseActivity {
                 File cameraOutput = getCameraOutput();
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, getSurveyor().getUriForFile(cameraOutput));
                 intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                startActivityForResult(intent, RESULT_IMAGE);
+
+                try {
+                    startActivityForResult(intent, RESULT_IMAGE);
+                } catch (ActivityNotFoundException e) {
+                    handleProblem("Can't find camera device", null);
+                }
             }
         });
     }
@@ -256,7 +262,12 @@ public class RunActivity extends BaseActivity {
                 }
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, getSurveyor().getUriForFile(videoOutput));
                 intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                startActivityForResult(intent, RESULT_VIDEO);
+
+                try {
+                    startActivityForResult(intent, RESULT_VIDEO);
+                } catch (ActivityNotFoundException e) {
+                    handleProblem("Can't find camera device", null);
+                }
             }
         });
     }

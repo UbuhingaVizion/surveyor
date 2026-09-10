@@ -170,6 +170,13 @@ public class Org {
     }
 
     /**
+     * Updates the API token for this org (does not persist - see {@link #save()} and TokenStore)
+     */
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    /**
      * Gets the name of this org
      *
      * @return the name

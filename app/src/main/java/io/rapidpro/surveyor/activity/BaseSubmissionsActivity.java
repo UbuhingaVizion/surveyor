@@ -9,6 +9,9 @@ import android.os.Build;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.work.WorkInfo;
+import androidx.work.WorkManager;
+
 import java.util.List;
 
 import io.rapidpro.surveyor.R;
@@ -20,6 +23,48 @@ import io.rapidpro.surveyor.work.SyncScheduler;
  * Base for activities that have submissions ((org and flow views)
  */
 public abstract class BaseSubmissionsActivity extends BaseActivity {
+
+    private boolean observingSync = false;
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        observeSync();
+    }
+
+    /**
+     * Observes background sync so the pending UI updates as submissions are sent
+     */
+    private void observeSync() {
+        if (observingSync) {
+            return;
+        }
+        observingSync = true;
+
+        WorkManager.getInstance(this)
+                .getWorkInfosForUniqueWorkLiveData(SyncScheduler.WORK_NAME)
+                .observe(this, infos -> {
+                    if (infos == null || infos.isEmpty()) {
+                        return;
+                    }
+
+                    WorkInfo.State state = infos.get(0).getState();
+                    setSyncing(state == WorkInfo.State.RUNNING);
+
+                    if (state == WorkInfo.State.SUCCEEDED
+                            || state == WorkInfo.State.FAILED
+                            || state == WorkInfo.State.CANCELLED) {
+                        refresh();
+                    }
+                });
+    }
+
+    private void setSyncing(boolean syncing) {
+        View button = findViewById(R.id.button_pending);
+        if (button != null) {
+            button.setEnabled(!syncing);
+        }
+    }
 
     /**
      * User has clicked a submit button

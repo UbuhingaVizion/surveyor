@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.rapidpro.surveyor.Logger;
+import io.rapidpro.surveyor.SurveyorApplication;
 import io.rapidpro.surveyor.net.TembaException;
 
 /**
@@ -50,7 +51,17 @@ public class OrgService {
     public Org getOrFetch(String uuid, String name, String token) throws TembaException, IOException {
         File directory = new File(rootDir, uuid);
         if (directory.exists() && directory.isDirectory()) {
-            return get(uuid);
+            Org org = get(uuid);
+
+            // a re-authentication may have rotated the API token - keep the stored one in sync
+            if (token != null && !token.equals(org.getToken())) {
+                Logger.d("Updating token for org " + uuid);
+                org.setToken(token);
+                TokenStore.put(SurveyorApplication.get(), uuid, token);
+                org.save();
+            }
+
+            return org;
         }
 
         Org org = Org.create(directory, name, token);

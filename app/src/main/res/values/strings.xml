@@ -148,6 +148,7 @@
     <string name="stop">Stop Recording</string>
     <string name="record">Record</string>
     <string name="camera_error">Camera Error</string>
+    <string name="audio_error">Recording Error</string>
     <string name="description_info">Description info</string>
     <string name="tag_url">tag_url</string>
     <string name="tag_handler">tag_handler</string>
