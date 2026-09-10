@@ -17,6 +17,15 @@ android {
 
         testInstrumentationRunner "io.rapidpro.surveyor.test.TestRunner"
         testInstrumentationRunnerArguments notAnnotation: 'androidx.test.filters.FlakyTest'
+
+        // Optionally restrict packaged native ABIs, e.g. CI emulator builds:
+        //   ./gradlew connectedRapidproDebugAndroidTest -PabiFilters=x86_64
+        // Keeps the test APK small enough to install reliably on slow emulators.
+        if (project.hasProperty('abiFilters')) {
+            ndk {
+                abiFilters(*project.property('abiFilters').toString().split(','))
+            }
+        }
     }
     signingConfigs {
         release {

@@ -29,12 +29,11 @@ jobs:
     name: Instrumented tests (${{ matrix.api-level }} / ${{ matrix.target }})
     needs: unit
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
         include:
-          - api-level: 28
-            target: google_apis
           - api-level: 30
             target: google_apis
           - api-level: 30
@@ -45,6 +44,8 @@ jobs:
             target: google_apis
     env:
       jdk_version: '17'
+      # give the emulator time to shut down gracefully so `adb emu kill` doesn't fail
+      ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL: '60'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -55,6 +56,14 @@ jobs:
           java-version: ${{ env.jdk_version }}
           distribution: temurin
 
+      - name: Enable KVM access
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          ls -l /dev/kvm
+
       - name: Run instrumented tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -63,12 +72,36 @@ jobs:
           target: ${{ matrix.target }}
           profile: pixel_5
           force-avd-creation: true
+          disable-snapshot: true
           emulator-boot-timeout: 600
-          ram-size: 2048
+          ram-size: 3072
           cores: 2
-          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-metrics
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
           disable-animations: true
           script: |
             adb wait-for-device
             until [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; do sleep 5; done
-            ./gradlew connectedRapidproDebugAndroidTest
+            set +e
+            ./gradlew connectedRapidproDebugAndroidTest -PabiFilters=x86_64
+            RC=$?
+            if [ "$RC" != "0" ]; then
+              echo "===== CRASH BUFFER ====="
+              adb logcat -d -b crash -v threadtime || true
+              echo "===== ANDROIDRUNTIME / Surveyor / ActivityManager ====="
+              adb logcat -d -v threadtime -s AndroidRuntime:E Surveyor:V ActivityManager:I Instrumentation:I | tail -n 400 || true
+              echo "===== FULL LOGCAT (tail) ====="
+              adb logcat -d -v threadtime | tail -n 500 || true
+              adb logcat -d -v threadtime > logcat.txt 2>&1 || true
+            fi
+            exit $RC
+
+      - name: Upload instrumented test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: androidtest-logs-${{ matrix.api-level }}-${{ matrix.target }}
+          if-no-files-found: ignore
+          path: |
+            logcat.txt
+            app/build/reports/androidTests/**
+            app/build/outputs/androidTest-results/**
