@@ -1,11 +1,12 @@
 package io.rapidpro.surveyor.activity;
 
-import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -72,7 +73,7 @@ public class OrgChooseActivity extends BaseActivity implements OrgListFragment.C
 
             if (savedInstanceState == null) {
                 Fragment fragment = new OrgListFragment();
-                FragmentTransaction ft = getFragmentManager().beginTransaction();
+                FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
                 ft.add(R.id.fragment_container, fragment).commit();
             }
         }

@@ -1,7 +1,8 @@
 package io.rapidpro.surveyor.activity;
 
-import android.app.FragmentTransaction;
 import android.os.Bundle;
+
+import androidx.fragment.app.FragmentTransaction;
 
 import io.rapidpro.surveyor.fragment.SettingsFragment;
 
@@ -17,7 +18,7 @@ public class SettingsActivity extends BaseActivity {
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         ft.replace(android.R.id.content, new SettingsFragment()).commit();
     }
 }

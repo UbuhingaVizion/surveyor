@@ -59,7 +59,6 @@
 
     <LinearLayout
         android:id="@+id/fragment_container"
-        android:name="io.rapidpro.surveyor.fragment.FlowListFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/container_pending"

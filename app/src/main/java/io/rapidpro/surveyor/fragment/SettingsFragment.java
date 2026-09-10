@@ -2,10 +2,11 @@ package io.rapidpro.surveyor.fragment;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.Preference;
-import android.preference.PreferenceFragment;
 import android.util.Patterns;
 import android.widget.Toast;
+
+import androidx.preference.Preference;
+import androidx.preference.PreferenceFragmentCompat;
 
 import io.rapidpro.surveyor.R;
 import io.rapidpro.surveyor.SurveyorApplication;
@@ -15,16 +16,14 @@ import io.rapidpro.surveyor.activity.BaseActivity;
 /**
  * Fragment to show our settings
  */
-public class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
+public class SettingsFragment extends PreferenceFragmentCompat implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     public SettingsFragment() {
         // Required empty public constructor
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
+    public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         // make sure we're editing the correct preferences
         getPreferenceManager().setSharedPreferencesName(getSurveyor().getPreferencesName());
 

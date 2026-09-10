@@ -1,8 +1,6 @@
 package io.rapidpro.surveyor.activity;
 
 import android.app.AlertDialog;
-import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -12,6 +10,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.vdurmont.semver4j.Semver;
 
@@ -52,7 +53,7 @@ public class OrgActivity extends BaseSubmissionsActivity implements FlowListFrag
 
         if (savedInstanceState == null) {
             Fragment fragment = new FlowListFragment();
-            FragmentTransaction ft = getFragmentManager().beginTransaction();
+            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
             ft.add(R.id.fragment_container, fragment).commit();
         }
     }
