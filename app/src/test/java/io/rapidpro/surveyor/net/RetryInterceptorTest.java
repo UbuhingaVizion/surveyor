@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -89,5 +90,37 @@ public class RetryInterceptorTest {
             assertEquals(200, response.code());
         }
         assertEquals(2, server.getRequestCount());
+    }
+
+    @Test
+    public void retriesGetAfterTimeout() throws IOException {
+        server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.NO_RESPONSE));
+        server.enqueue(new MockResponse().setResponseCode(200).setBody("ok"));
+
+        OkHttpClient timeoutClient = new OkHttpClient.Builder()
+                .readTimeout(200, TimeUnit.MILLISECONDS)
+                .addInterceptor(new RetryInterceptor(2, 10))
+                .build();
+
+        Request request = new Request.Builder().url(server.url("/x")).build();
+
+        try (Response response = timeoutClient.newCall(request).execute()) {
+            assertEquals(200, response.code());
+        }
+        assertEquals(2, server.getRequestCount());
+    }
+
+    @Test
+    public void doesNotRetryServerErrors() throws IOException {
+        server.enqueue(new MockResponse().setResponseCode(500).setBody("boom"));
+        server.enqueue(new MockResponse().setResponseCode(200).setBody("ok"));
+
+        Request request = new Request.Builder().url(server.url("/x")).build();
+
+        try (Response response = client.newCall(request).execute()) {
+            assertEquals(500, response.code());
+        }
+        // 5xx is handled by the worker's backoff, not the interceptor
+        assertEquals(1, server.getRequestCount());
     }
 }

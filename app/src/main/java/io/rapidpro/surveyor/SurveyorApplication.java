@@ -76,8 +76,12 @@ public class SurveyorApplication extends Application {
         }
 
         // set up background sync (notifications + schedule any pending submissions)
-        SyncNotifier.createChannels(this);
-        SyncScheduler.enqueue(this, isSendOverWifiOnly());
+        try {
+            SyncNotifier.createChannels(this);
+            SyncScheduler.enqueue(this, isSendOverWifiOnly());
+        } catch (Exception e) {
+            Logger.e("Unable to initialise background sync", e);
+        }
     }
 
     /**

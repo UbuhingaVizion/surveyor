@@ -17,4 +17,14 @@ public class SyncSchedulerTest {
     public void mobileAllowedMapsToConnected() {
         assertEquals(NetworkType.CONNECTED, SyncScheduler.networkTypeFor(false));
     }
+
+    @Test
+    public void wifiOnlyConstraintsRequireUnmetered() {
+        assertEquals(NetworkType.UNMETERED, SyncScheduler.constraintsFor(true).getRequiredNetworkType());
+    }
+
+    @Test
+    public void mobileConstraintsRequireConnected() {
+        assertEquals(NetworkType.CONNECTED, SyncScheduler.constraintsFor(false).getRequiredNetworkType());
+    }
 }

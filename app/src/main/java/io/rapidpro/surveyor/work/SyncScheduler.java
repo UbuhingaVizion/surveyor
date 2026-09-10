@@ -54,9 +54,7 @@ public final class SyncScheduler {
     }
 
     private static OneTimeWorkRequest buildRequest(boolean wifiOnly) {
-        Constraints constraints = new Constraints.Builder()
-                .setRequiredNetworkType(networkTypeFor(wifiOnly))
-                .build();
+        Constraints constraints = constraintsFor(wifiOnly);
 
         return new OneTimeWorkRequest.Builder(SubmissionSyncWorker.class)
                 .setConstraints(constraints)
@@ -69,5 +67,14 @@ public final class SyncScheduler {
      */
     static NetworkType networkTypeFor(boolean wifiOnly) {
         return wifiOnly ? NetworkType.UNMETERED : NetworkType.CONNECTED;
+    }
+
+    /**
+     * The constraints for a sync given the Wi-Fi-only setting (visible for testing)
+     */
+    static Constraints constraintsFor(boolean wifiOnly) {
+        return new Constraints.Builder()
+                .setRequiredNetworkType(networkTypeFor(wifiOnly))
+                .build();
     }
 }
