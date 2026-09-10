@@ -1,5 +1,7 @@
 package io.rapidpro.surveyor.data;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 
@@ -97,7 +99,10 @@ public class Org {
         org.flows = new ArrayList<>();
         org.legacySubmissionsDirectory = null;
 
-        FileUtils.writeStringToFile(new File(directory, DETAILS_FILE), "{\"name\":\"" + name + "\",\"token\":\"" + token + "\"}");
+        // store the token encrypted (not in details.json)
+        TokenStore.put(SurveyorApplication.get(), directory.getName(), token);
+
+        org.save();
         FileUtils.writeStringToFile(new File(directory, FLOWS_FILE), "[]");
         return org;
     }
@@ -117,6 +122,16 @@ public class Org {
         String detailsJSON = FileUtils.readFileToString(new File(directory, DETAILS_FILE));
         Org org = JsonUtils.unmarshal(detailsJSON, Org.class);
         org.directory = directory;
+
+        // load the token from encrypted storage, migrating a legacy plaintext token if present
+        String uuid = directory.getName();
+        String storedToken = TokenStore.get(SurveyorApplication.get(), uuid);
+        if (storedToken != null) {
+            org.token = storedToken;
+        } else if (org.token != null) {
+            TokenStore.put(SurveyorApplication.get(), uuid, org.token);
+            org.save();
+        }
 
         // read flows.json
         String flowsJson = FileUtils.readFileToString(new File(directory, FLOWS_FILE));
@@ -284,9 +299,11 @@ public class Org {
     }
 
     public void save() throws IOException {
-        // (re)write org fields to details.json
+        // (re)write org fields to details.json, never persisting the API token in plaintext
         String detailsJSON = JsonUtils.marshal(this);
-        FileUtils.writeStringToFile(new File(directory, DETAILS_FILE), detailsJSON);
+        JsonObject obj = new JsonParser().parse(detailsJSON).getAsJsonObject();
+        obj.remove("token");
+        FileUtils.writeStringToFile(new File(directory, DETAILS_FILE), obj.toString());
     }
 
     private void refreshAssets(RefreshProgress progress) throws TembaException, IOException {

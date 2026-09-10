@@ -19,7 +19,6 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.greysonparrelli.permiso.Permiso;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,22 +48,17 @@ public class CaptureLocationActivity extends BaseActivity implements GoogleApiCl
 
         setContentView(R.layout.activity_capture_location);
 
-        Permiso.getInstance().requestPermissions(new Permiso.IOnPermissionResult() {
-            @Override
-            @SuppressWarnings("ResourceType")
-            public void onPermissionResult(Permiso.ResultSet resultSet) {
-                if (resultSet.areAllPermissionsGranted()) {
-                    onPermissionsGranted();
-                } else {
-                    finish();
-                }
-            }
-
-            @Override
-            public void onRationaleRequested(Permiso.IOnRationaleProvided callback, String... permissions) {
-                CaptureLocationActivity.this.showRationaleDialog(R.string.permission_location, callback);
-            }
-        }, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION);
+        requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                R.string.permission_location, new PermissionCallback() {
+                    @Override
+                    public void onPermissionsResult(boolean allGranted) {
+                        if (allGranted) {
+                            onPermissionsGranted();
+                        } else {
+                            finish();
+                        }
+                    }
+                });
 
         locationCallback = new LocationCallback() {
             @Override

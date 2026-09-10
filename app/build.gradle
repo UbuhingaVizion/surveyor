@@ -101,6 +101,9 @@ dependencies {
     // background sync
     implementation 'androidx.work:work-runtime:2.9.1'
 
+    // encrypted storage for API tokens
+    implementation 'androidx.security:security-crypto:1.1.0-alpha06'
+
     // rest api
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
@@ -119,9 +122,6 @@ dependencies {
     implementation 'commons-io:commons-io:2.4'
 
     implementation 'com.vdurmont:semver4j:2.2.0'
-
-    // Android M permissions
-    implementation 'com.greysonparrelli.permiso:permiso:0.3.0'
 
     // unit tests
     testImplementation 'junit:junit:4.13.2'

@@ -27,7 +27,6 @@ import androidx.appcompat.app.AlertDialog;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.greysonparrelli.permiso.Permiso;
 import com.nyaruka.goflow.mobile.Environment;
 import com.nyaruka.goflow.mobile.Event;
 import com.nyaruka.goflow.mobile.Hint;
@@ -207,94 +206,78 @@ public class RunActivity extends BaseActivity {
      * Captures an image from the camera
      */
     private void captureImage() {
-
-        Permiso.getInstance().requestPermissions(new Permiso.IOnPermissionResult() {
+        requestPermissions(new String[]{Manifest.permission.CAMERA}, R.string.permission_camera, new PermissionCallback() {
             @Override
-            @SuppressWarnings("ResourceType")
-            public void onPermissionResult(Permiso.ResultSet resultSet) {
-                if (resultSet.areAllPermissionsGranted()) {
-                    Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    ComponentName cameraPkg = intent.resolveActivity(getPackageManager());
-
-                    if (cameraPkg == null) {
-                        handleProblem("Can't find camera device", null);
-                        return;
-                    }
-                    Logger.d("Camera package is " + cameraPkg.toString());
-
-                    File cameraOutput = getCameraOutput();
-                    intent.putExtra(MediaStore.EXTRA_OUTPUT, getSurveyor().getUriForFile(cameraOutput));
-                    intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                    startActivityForResult(intent, RESULT_IMAGE);
+            public void onPermissionsResult(boolean allGranted) {
+                if (!allGranted) {
+                    return;
                 }
-            }
 
-            @Override
-            public void onRationaleRequested(Permiso.IOnRationaleProvided callback, String... permissions) {
-                RunActivity.this.showRationaleDialog(R.string.permission_camera, callback);
-            }
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                ComponentName cameraPkg = intent.resolveActivity(getPackageManager());
 
-        }, Manifest.permission.CAMERA);
+                if (cameraPkg == null) {
+                    handleProblem("Can't find camera device", null);
+                    return;
+                }
+                Logger.d("Camera package is " + cameraPkg.toString());
+
+                File cameraOutput = getCameraOutput();
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, getSurveyor().getUriForFile(cameraOutput));
+                intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                startActivityForResult(intent, RESULT_IMAGE);
+            }
+        });
     }
 
     /**
      * Captures a video using the system camera app
      */
     private void captureVideo() {
-        Permiso.getInstance().requestPermissions(new Permiso.IOnPermissionResult() {
+        requestPermissions(new String[]{Manifest.permission.CAMERA}, R.string.permission_camera, new PermissionCallback() {
             @Override
-            @SuppressWarnings("ResourceType")
-            public void onPermissionResult(Permiso.ResultSet resultSet) {
-                if (resultSet.areAllPermissionsGranted()) {
-                    Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-                    ComponentName cameraPkg = intent.resolveActivity(getPackageManager());
-
-                    if (cameraPkg == null) {
-                        handleProblem("Can't find camera device", null);
-                        return;
-                    }
-                    Logger.d("Camera package is " + cameraPkg.toString());
-
-                    File videoOutput = getVideoOutput();
-                    if (videoOutput.exists()) {
-                        videoOutput.delete();
-                    }
-                    intent.putExtra(MediaStore.EXTRA_OUTPUT, getSurveyor().getUriForFile(videoOutput));
-                    intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                    startActivityForResult(intent, RESULT_VIDEO);
+            public void onPermissionsResult(boolean allGranted) {
+                if (!allGranted) {
+                    return;
                 }
-            }
 
-            @Override
-            public void onRationaleRequested(Permiso.IOnRationaleProvided callback, String... permissions) {
-                RunActivity.this.showRationaleDialog(R.string.permission_camera, callback);
-            }
+                Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+                ComponentName cameraPkg = intent.resolveActivity(getPackageManager());
 
-        }, Manifest.permission.CAMERA);
+                if (cameraPkg == null) {
+                    handleProblem("Can't find camera device", null);
+                    return;
+                }
+                Logger.d("Camera package is " + cameraPkg.toString());
+
+                File videoOutput = getVideoOutput();
+                if (videoOutput.exists()) {
+                    videoOutput.delete();
+                }
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, getSurveyor().getUriForFile(videoOutput));
+                intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                startActivityForResult(intent, RESULT_VIDEO);
+            }
+        });
     }
 
     /**
      * Captures an audio recording from the microphone
      */
     private void captureAudio() {
-        Permiso.getInstance().requestPermissions(new Permiso.IOnPermissionResult() {
+        requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, R.string.permission_record, new PermissionCallback() {
             @Override
-            @SuppressWarnings("ResourceType")
-            public void onPermissionResult(Permiso.ResultSet resultSet) {
-                if (resultSet.areAllPermissionsGranted()) {
-                    Intent intent = new Intent(RunActivity.this, CaptureAudioActivity.class);
-                    intent.putExtra(SurveyorIntent.EXTRA_MEDIA_FILE, getAudioOutput().getAbsolutePath());
-                    intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                    startActivityForResult(intent, RESULT_AUDIO);
+            public void onPermissionsResult(boolean allGranted) {
+                if (!allGranted) {
+                    return;
                 }
-            }
 
-            @Override
-            public void onRationaleRequested(Permiso.IOnRationaleProvided callback, String... permissions) {
-                RunActivity.this.showRationaleDialog(R.string.permission_record, callback);
+                Intent intent = new Intent(RunActivity.this, CaptureAudioActivity.class);
+                intent.putExtra(SurveyorIntent.EXTRA_MEDIA_FILE, getAudioOutput().getAbsolutePath());
+                intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                startActivityForResult(intent, RESULT_AUDIO);
             }
-
-        }, Manifest.permission.RECORD_AUDIO);
+        });
     }
 
     /**

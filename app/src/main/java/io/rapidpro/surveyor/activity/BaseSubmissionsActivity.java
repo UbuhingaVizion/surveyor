@@ -2,7 +2,6 @@ package io.rapidpro.surveyor.activity;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -48,10 +47,12 @@ public abstract class BaseSubmissionsActivity extends BaseActivity {
 
     private void doSendNow() {
         // Android 13+ needs runtime permission to show sync notifications
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
-                && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 0);
-        }
+        requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, new PermissionCallback() {
+            @Override
+            public void onPermissionsResult(boolean allGranted) {
+                // whether or not notifications are granted, the send can proceed
+            }
+        });
 
         SyncScheduler.sendNow(this);
 

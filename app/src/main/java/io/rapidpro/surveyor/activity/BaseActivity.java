@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -12,10 +13,12 @@ import android.view.MenuItem;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.ShareCompat;
-
-import com.greysonparrelli.permiso.Permiso;
-import com.greysonparrelli.permiso.PermisoActivity;
+import androidx.core.content.ContextCompat;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -33,9 +36,34 @@ import io.rapidpro.surveyor.ui.ViewCache;
  * All activities for the SurveyorApplication app extend this base activity which provides convenience methods
  * for things like authentication etc.
  */
-public abstract class BaseActivity extends PermisoActivity {
+public abstract class BaseActivity extends AppCompatActivity {
 
     private ViewCache m_viewCache;
+
+    /**
+     * Callback for permission requests
+     */
+    public interface PermissionCallback {
+        void onPermissionsResult(boolean allGranted);
+    }
+
+    private PermissionCallback pendingPermissionCallback;
+
+    private final ActivityResultLauncher<String[]> permissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
+                boolean allGranted = true;
+                for (Boolean granted : result.values()) {
+                    if (granted == null || !granted) {
+                        allGranted = false;
+                        break;
+                    }
+                }
+                PermissionCallback callback = pendingPermissionCallback;
+                pendingPermissionCallback = null;
+                if (callback != null) {
+                    callback.onPermissionsResult(allGranted);
+                }
+            });
 
     /**
      * @see android.app.Activity#onCreate(Bundle)
@@ -289,7 +317,57 @@ public abstract class BaseActivity extends PermisoActivity {
                 }).show();
     }
 
-    public void showRationaleDialog(int body, Permiso.IOnRationaleProvided callback) {
-        Permiso.getInstance().showRationaleInDialog(getString(R.string.title_permissions), getString(body), null, callback);
+    /**
+     * Requests the given permissions, showing a rationale dialog first if appropriate
+     */
+    protected void requestPermissions(String[] permissions, int rationaleResId, PermissionCallback callback) {
+        if (hasAllPermissions(permissions)) {
+            callback.onPermissionsResult(true);
+            return;
+        }
+
+        pendingPermissionCallback = callback;
+
+        if (shouldShowRationale(permissions)) {
+            showConfirmDialog(rationaleResId, new ConfirmationListener() {
+                @Override
+                public void onConfirm() {
+                    permissionLauncher.launch(permissions);
+                }
+            });
+        } else {
+            permissionLauncher.launch(permissions);
+        }
+    }
+
+    /**
+     * Requests the given permissions without a rationale
+     */
+    protected void requestPermissions(String[] permissions, PermissionCallback callback) {
+        if (hasAllPermissions(permissions)) {
+            callback.onPermissionsResult(true);
+            return;
+        }
+
+        pendingPermissionCallback = callback;
+        permissionLauncher.launch(permissions);
+    }
+
+    private boolean hasAllPermissions(String[] permissions) {
+        for (String permission : permissions) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean shouldShowRationale(String[] permissions) {
+        for (String permission : permissions) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
