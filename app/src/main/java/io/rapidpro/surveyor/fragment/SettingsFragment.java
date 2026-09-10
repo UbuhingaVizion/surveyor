@@ -60,7 +60,8 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if (key.equals(SurveyorPreferences.HOST)) {
+        // key is null when all preferences are cleared (e.g. on logout/tests)
+        if (SurveyorPreferences.HOST.equals(key)) {
             getSurveyor().onTembaHostChanged();
         }
     }
