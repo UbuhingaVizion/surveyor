@@ -7,17 +7,16 @@ import org.junit.Test;
 
 import java.util.Collections;
 
+import io.rapidpro.surveyor.R;
 import io.rapidpro.surveyor.SurveyorApplication;
 import io.rapidpro.surveyor.SurveyorPreferences;
 import io.rapidpro.surveyor.test.BaseApplicationTest;
 
-import static androidx.test.espresso.Espresso.onData;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static androidx.test.espresso.action.ViewActions.replaceText;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
-import static androidx.test.espresso.matcher.PreferenceMatchers.withKey;
 import static androidx.test.espresso.matcher.ViewMatchers.assertThat;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withClassName;
@@ -34,7 +33,9 @@ public class SettingsActivityTest extends BaseApplicationTest {
     public void showHost() {
         rule.launchActivity(null);
 
-        onData(withKey("host"))
+        // preferences are rendered by AndroidX PreferenceFragmentCompat (a RecyclerView), so match
+        // by title text rather than using onData
+        onView(withText(R.string.pref_title_host))
                 .check(matches(isDisplayed()))
                 .perform(click());
 

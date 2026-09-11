@@ -7,14 +7,14 @@
                 android:endColor="@color/pending_border"
                 android:angle="270" />
             <stroke
-                android:width="3dp"
+                android:width="2dp"
                 android:color="@color/pending_border" />
             <corners
-                android:radius="3dp" />
+                android:radius="4dp" />
             <padding
-                android:left="6dp"
+                android:left="8dp"
                 android:top="6dp"
-                android:right="6dp"
+                android:right="8dp"
                 android:bottom="6dp" />
         </shape>
     </item>
@@ -26,14 +26,14 @@
                 android:startColor="@color/pending"
                 android:angle="270" />
             <stroke
-                android:width="3dp"
+                android:width="2dp"
                 android:color="@color/pending_background" />
             <corners
-                android:radius="3dp" />
+                android:radius="4dp" />
             <padding
-                android:left="6dp"
+                android:left="8dp"
                 android:top="6dp"
-                android:right="6dp"
+                android:right="8dp"
                 android:bottom="6dp" />
         </shape>
     </item>
@@ -48,11 +48,11 @@
                 android:width="2dp"
                 android:color="@color/pending_border" />
             <corners
-                android:radius="3dp" />
+                android:radius="4dp" />
             <padding
-                android:left="6dp"
+                android:left="8dp"
                 android:top="6dp"
-                android:right="6dp"
+                android:right="8dp"
                 android:bottom="6dp" />
         </shape>
     </item>

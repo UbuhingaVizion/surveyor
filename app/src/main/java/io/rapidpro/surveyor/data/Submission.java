@@ -35,6 +35,7 @@ public class Submission {
     private static final String MODIFIERS_FILE = "modifiers.jsonl";
     private static final String EVENTS_FILE = "events.jsonl";
     private static final String COMPLETION_FILE = ".completed";
+    private static final String UPLOAD_STATE_FILE = ".upload.json";
     private static final String MEDIA_DIR = "media";
 
     private Org org;
@@ -186,27 +187,76 @@ public class Submission {
         }
     }
 
+    /**
+     * Loads the persisted upload state for this submission (or a fresh one)
+     */
+    public UploadState getUploadState() throws IOException {
+        File file = new File(directory, UPLOAD_STATE_FILE);
+        if (!file.exists()) {
+            return new UploadState();
+        }
+        return UploadState.fromJson(FileUtils.readFileToString(file));
+    }
+
+    /**
+     * Persists the upload state for this submission
+     */
+    public void saveUploadState(UploadState state) throws IOException {
+        FileUtils.writeStringToFile(new File(directory, UPLOAD_STATE_FILE), state.toJson());
+    }
+
+    /**
+     * Gets whether this submission has already been submitted to the server
+     */
+    public boolean isSubmitted() throws IOException {
+        return getUploadState().isSubmitted();
+    }
+
+    /**
+     * @deprecated use {@link #uploadAndSubmit()} which is resumable
+     */
+    @Deprecated
     public void submit() throws IOException, TembaException {
+        uploadAndSubmit();
+    }
+
+    /**
+     * Uploads any media that hasn't yet been uploaded and submits the payload. Safe to retry:
+     * media already uploaded is skipped and an already-submitted session is not sent again.
+     */
+    public void uploadAndSubmit() throws IOException, TembaException {
         Logger.d("Submitting submission " + getUuid() + "...");
+
+        UploadState state = getUploadState();
+        if (state.isSubmitted()) {
+            delete();
+            return;
+        }
+
+        // upload any media not already uploaded (resumable - persist after each success)
+        if (hasMedia()) {
+            SurveyorApplication app = SurveyorApplication.get();
+            for (File mediaFile : getMediaDirectory().listFiles()) {
+                Uri mediaUri = app.getUriForFile(mediaFile);
+                if (state.getUploadedUrl(mediaUri.toString()) == null) {
+                    String newUrl = app.getTembaService().uploadMedia(org.getToken(), mediaUri);
+                    state.recordMedia(mediaUri.toString(), newUrl);
+                    saveUploadState(state);
+                    Logger.d("Uploaded media " + mediaUri + " to " + newUrl);
+                }
+            }
+        }
 
         String session = FileUtils.readFileToString(new File(directory, SESSION_FILE));
         List<String> modifiers = FileUtils.readLines(new File(directory, MODIFIERS_FILE));
         List<String> events = FileUtils.readLines(new File(directory, EVENTS_FILE));
 
-        // upload all media and get a new remote URL for each item
-        Map<Uri, String> mediaUrls = uploadMedia();
-
-        // convert the map to parallel arrays of strings for replacement
-        String[] oldUris = new String[mediaUrls.size()];
-        String[] newUrls = new String[mediaUrls.size()];
-        int e = 0;
-        for (Map.Entry<Uri, String> entry : mediaUrls.entrySet()) {
-            oldUris[e] = entry.getKey().toString();
-            newUrls[e] = entry.getValue();
-            e++;
-        }
-
+        // convert the recorded media mappings to parallel arrays of strings for replacement
+        Map<String, String> mediaUrls = state.getMedia();
+        String[] oldUris = mediaUrls.keySet().toArray(new String[0]);
+        String[] newUrls = new String[oldUris.length];
         for (int i = 0; i < oldUris.length; i++) {
+            newUrls[i] = mediaUrls.get(oldUris[i]);
             Logger.d(oldUris[i] + " --> " + newUrls[i]);
         }
 
@@ -224,31 +274,10 @@ public class Submission {
 
         SurveyorApplication.get().getTembaService().submit(org.getToken(), payload);
 
+        state.setSubmitted(true);
+        saveUploadState(state);
+
         delete();
-    }
-
-    /**
-     * Upload all media files for this submission and return a map of their new URLs
-     *
-     * @return the map of local URIs to remote URLs
-     */
-    private Map<Uri, String> uploadMedia() throws IOException, TembaException {
-        if (!hasMedia()) {
-            return Collections.emptyMap();
-        }
-
-        SurveyorApplication app = SurveyorApplication.get();
-        Map<Uri, String> uploads = new HashMap<>();
-
-        for (File mediaFile : getMediaDirectory().listFiles()) {
-            Uri mediaUri = app.getUriForFile(mediaFile);
-            String newUrl = app.getTembaService().uploadMedia(org.getToken(), mediaUri);
-
-            uploads.put(mediaUri, newUrl);
-
-            Logger.d("Uploaded media " + mediaUri + " to " + newUrl);
-        }
-        return uploads;
     }
 
     private boolean hasMedia() {

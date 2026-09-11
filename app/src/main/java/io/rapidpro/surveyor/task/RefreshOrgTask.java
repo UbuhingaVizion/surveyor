@@ -1,64 +1,55 @@
 package io.rapidpro.surveyor.task;
 
-import android.os.AsyncTask;
-
 import io.rapidpro.surveyor.Logger;
 import io.rapidpro.surveyor.data.Org;
+import io.rapidpro.surveyor.utils.AppExecutors;
 
 /**
- * Task to completely refresh a single org - details and assets
+ * Refreshes a single org (details and assets), reporting progress on the main thread.
+ * Runs on a background executor (replaces the deprecated AsyncTask).
  */
-public class RefreshOrgTask extends AsyncTask<Org, Integer, Void> {
+public class RefreshOrgTask {
 
-    private Listener listener;
+    private final Listener listener;
     private boolean failed;
 
     public RefreshOrgTask(Listener listener) {
         this.listener = listener;
     }
 
-    @Override
-    protected Void doInBackground(Org... args) {
-        Org org = args[0];
-
-        try {
-            org.refresh(true, new Org.RefreshProgress() {
-                @Override
-                public void reportProgress(int percent) {
-                    publishProgress(percent);
+    public void execute(final Org org) {
+        AppExecutors.io().execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    org.refresh(true, new Org.RefreshProgress() {
+                        @Override
+                        public void reportProgress(final int percent) {
+                            AppExecutors.runOnMain(new Runnable() {
+                                @Override
+                                public void run() {
+                                    listener.onProgress(percent);
+                                }
+                            });
+                        }
+                    });
+                } catch (Exception e) {
+                    Logger.e("Unable to refresh org", e);
+                    RefreshOrgTask.this.failed = true;
                 }
-            });
 
-        } catch (Exception e) {
-            Logger.e("Unable to refresh org", e);
-            this.failed = true;
-        }
-
-        return null;
-    }
-
-    /**
-     * @see AsyncTask#onProgressUpdate(Object[])
-     */
-    @Override
-    protected void onProgressUpdate(Integer... values) {
-        super.onProgressUpdate(values);
-
-        listener.onProgress(values[0]);
-    }
-
-    /**
-     * @see AsyncTask#onPostExecute(Object)
-     */
-    @Override
-    protected void onPostExecute(Void aVoid) {
-        super.onPostExecute(aVoid);
-
-        if (this.failed) {
-            this.listener.onFailure();
-        } else {
-            this.listener.onComplete();
-        }
+                AppExecutors.runOnMain(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (failed) {
+                            listener.onFailure();
+                        } else {
+                            listener.onComplete();
+                        }
+                    }
+                });
+            }
+        });
     }
 
     public interface Listener {

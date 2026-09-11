@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- not clear why these are needed still, but app crashes without them -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
-    <uses-permission android:name="android.permission.READ_PROFILE" />
-    <uses-permission android:name="android.permission.READ_CONTACTS" />
-    <uses-permission android:name="android.permission.WRITE_CONTACTS" />
+
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -20,12 +18,24 @@
         android:required="true" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
 
+    <!-- Android 11+ package visibility: needed so resolveActivity() can find the camera apps -->
+    <queries>
+        <intent>
+            <action android:name="android.media.action.IMAGE_CAPTURE" />
+        </intent>
+        <intent>
+            <action android:name="android.media.action.VIDEO_CAPTURE" />
+        </intent>
+    </queries>
+
     <application
         android:name=".SurveyorApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
-        android:theme="@style/RapidTheme">
+        android:theme="@style/RapidTheme"
+        android:windowOptOutEdgeToEdgeEnforcement="true">
 
         <activity
             android:name=".activity.LoginActivity"
@@ -37,6 +47,11 @@
             android:name=".activity.SettingsActivity"
             android:screenOrientation="portrait"
             android:label="@string/title_activity_settings"
+            android:exported="false" />
+        <activity
+            android:name=".activity.PermissionsActivity"
+            android:screenOrientation="portrait"
+            android:label="@string/title_permissions"
             android:exported="false" />
         <activity
             android:name=".activity.OrgChooseActivity"
@@ -70,11 +85,6 @@
             android:label="@string/title_activity_audio"
             android:exported="false" />
         <activity
-            android:name=".activity.CaptureVideoActivity"
-            android:theme="@style/RapidTheme.FullScreen"
-            android:label="@string/title_activity_video"
-            android:exported="false" />
-        <activity
             android:name=".activity.CaptureLocationActivity"
             android:theme="@style/RapidTheme.FullScreen"
             android:label="@string/title_activity_location"
@@ -93,5 +103,11 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths" />
         </provider>
+
+        <!-- WorkManager foreground service (long-running uploads on slow networks) -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
     </application>
 </manifest>

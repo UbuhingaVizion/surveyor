@@ -4,9 +4,13 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.media.MediaRecorder;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.io.File;
 
 import io.rapidpro.surveyor.Logger;
 import io.rapidpro.surveyor.R;
@@ -33,40 +37,73 @@ public class CaptureAudioActivity extends BaseActivity {
         return false;
     }
 
+    /**
+     * Starts recording audio to the file provided in the intent
+     */
     public void recordAudio() {
-        isRecording = true;
-
         String output = getIntent().getStringExtra(SurveyorIntent.EXTRA_MEDIA_FILE);
 
         Logger.d("Recording audio to " + output + "...");
 
         try {
-            mediaRecorder = new MediaRecorder();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                mediaRecorder = new MediaRecorder(this);
+            } else {
+                mediaRecorder = new MediaRecorder();
+            }
             mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
             mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
             mediaRecorder.setOutputFile(output);
             mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
             mediaRecorder.prepare();
+            mediaRecorder.start();
+
+            isRecording = true;
 
         } catch (Exception e) {
-            Logger.e("Unable to create media recorder", e);
-        }
+            Logger.e("Unable to start recording", e);
 
-        mediaRecorder.start();
+            releaseMediaRecorder();
+            isRecording = false;
+
+            Toast.makeText(this, R.string.audio_error, Toast.LENGTH_SHORT).show();
+            setResult(Activity.RESULT_CANCELED);
+            finish();
+        }
     }
 
     private void releaseMediaRecorder() {
         if (mediaRecorder != null) {
-            mediaRecorder.reset();
-            mediaRecorder.release();
+            try {
+                mediaRecorder.reset();
+            } catch (Exception ignored) {
+            }
+            try {
+                mediaRecorder.release();
+            } catch (Exception ignored) {
+            }
             mediaRecorder = null;
         }
     }
 
     private void stopRecording() {
         if (mediaRecorder != null) {
-            mediaRecorder.stop();
+            try {
+                mediaRecorder.stop();
+            } catch (RuntimeException e) {
+                // stop() throws if no valid audio data was recorded (e.g. stopped too early)
+                Logger.e("Recording was too short or invalid", e);
+
+                releaseMediaRecorder();
+                isRecording = false;
+                deleteOutput();
+
+                setResult(Activity.RESULT_CANCELED);
+                finish();
+                return;
+            }
         }
+
         releaseMediaRecorder();
         isRecording = false;
 
@@ -74,6 +111,33 @@ public class CaptureAudioActivity extends BaseActivity {
         returnIntent.putExtra(SurveyorIntent.EXTRA_MEDIA_FILE, getIntent().getStringExtra(SurveyorIntent.EXTRA_MEDIA_FILE));
         setResult(Activity.RESULT_OK, returnIntent);
         finish();
+    }
+
+    private void deleteOutput() {
+        String output = getIntent().getStringExtra(SurveyorIntent.EXTRA_MEDIA_FILE);
+        if (output != null) {
+            File file = new File(output);
+            if (file.exists() && !file.delete()) {
+                Logger.w("Unable to delete incomplete recording " + output);
+            }
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        // don't leave the microphone locked if we're backgrounded (e.g. incoming call)
+        if (isRecording) {
+            stopRecording();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        releaseMediaRecorder();
     }
 
     public void toggleRecording(View view) {

@@ -1,6 +1,7 @@
 package io.rapidpro.surveyor.activity;
 
 import android.Manifest;
+import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -27,7 +28,6 @@ import androidx.appcompat.app.AlertDialog;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.greysonparrelli.permiso.Permiso;
 import com.nyaruka.goflow.mobile.Environment;
 import com.nyaruka.goflow.mobile.Event;
 import com.nyaruka.goflow.mobile.Hint;
@@ -44,6 +44,7 @@ import java.io.IOException;
 import io.rapidpro.surveyor.Logger;
 import io.rapidpro.surveyor.R;
 import io.rapidpro.surveyor.SurveyorIntent;
+import io.rapidpro.surveyor.SurveyorPreferences;
 import io.rapidpro.surveyor.data.Flow;
 import io.rapidpro.surveyor.data.Org;
 import io.rapidpro.surveyor.data.Submission;
@@ -57,6 +58,7 @@ import io.rapidpro.surveyor.ui.ViewCache;
 import io.rapidpro.surveyor.utils.ImageUtils;
 import io.rapidpro.surveyor.widget.ChatBubbleView;
 import io.rapidpro.surveyor.widget.IconLinkView;
+import io.rapidpro.surveyor.work.SyncScheduler;
 
 public class RunActivity extends BaseActivity {
 
@@ -95,11 +97,20 @@ public class RunActivity extends BaseActivity {
 
         try {
             Org org = getSurveyor().getOrgService().get(orgUUID);
-            Environment environment = Engine.createEnvironment(org);
+            String language = getIntent().getStringExtra(SurveyorIntent.EXTRA_LANGUAGE);
+            if (language == null) {
+                language = getSurveyor().getPreferences().getString(SurveyorPreferences.LANGUAGE, "");
+            }
+            Environment environment = Engine.createEnvironment(org, language);
             SessionAssets assets = Engine.createSessionAssets(environment, Engine.loadAssets(org.getAssets()));
 
             Flow flow = org.getFlow(flowUUID);
             setTitle(flow.getName());
+
+            applyOrgTheme(org);
+            if (getSupportActionBar() != null) {
+                getSupportActionBar().setSubtitle(org.getName());
+            }
 
             Trigger trigger = Engine.createManualTrigger(environment, Contact.createEmpty(assets), flow.toReference());
 
@@ -206,68 +217,97 @@ public class RunActivity extends BaseActivity {
      * Captures an image from the camera
      */
     private void captureImage() {
-
-        Permiso.getInstance().requestPermissions(new Permiso.IOnPermissionResult() {
+        requestPermissions(new String[]{Manifest.permission.CAMERA}, R.string.permission_camera, new PermissionCallback() {
             @Override
-            @SuppressWarnings("ResourceType")
-            public void onPermissionResult(Permiso.ResultSet resultSet) {
-                if (resultSet.areAllPermissionsGranted()) {
-                    Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    ComponentName cameraPkg = intent.resolveActivity(getPackageManager());
-
-                    if (cameraPkg == null) {
-                        handleProblem("Can't find camera device", null);
-                        return;
+            public void onPermissionsResult(boolean allGranted) {
+                if (!allGranted) {
+                    if (isPermanentlyDenied(new String[]{Manifest.permission.CAMERA})) {
+                        showPermissionSettingsDialog(R.string.permission_camera_denied);
                     }
-                    Logger.d("Camera package is " + cameraPkg.toString());
+                    return;
+                }
 
-                    File cameraOutput = getCameraOutput();
-                    intent.putExtra(MediaStore.EXTRA_OUTPUT, getSurveyor().getUriForFile(cameraOutput));
-                    intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                ComponentName cameraPkg = intent.resolveActivity(getPackageManager());
+
+                if (cameraPkg == null) {
+                    handleProblem("Can't find camera device", null);
+                    return;
+                }
+                Logger.d("Camera package is " + cameraPkg.toString());
+
+                File cameraOutput = getCameraOutput();
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, getSurveyor().getUriForFile(cameraOutput));
+                intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
+                try {
                     startActivityForResult(intent, RESULT_IMAGE);
+                } catch (ActivityNotFoundException e) {
+                    handleProblem("Can't find camera device", null);
                 }
             }
-
-            @Override
-            public void onRationaleRequested(Permiso.IOnRationaleProvided callback, String... permissions) {
-                RunActivity.this.showRationaleDialog(R.string.permission_camera, callback);
-            }
-
-        }, Manifest.permission.CAMERA);
+        });
     }
 
     /**
-     * Captures a video from the camera
+     * Captures a video using the system camera app
      */
     private void captureVideo() {
-        Intent intent = new Intent(this, CaptureVideoActivity.class);
-        intent.putExtra(SurveyorIntent.EXTRA_MEDIA_FILE, getVideoOutput().getAbsolutePath());
-        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        startActivityForResult(intent, RESULT_VIDEO);
+        requestPermissions(new String[]{Manifest.permission.CAMERA}, R.string.permission_camera, new PermissionCallback() {
+            @Override
+            public void onPermissionsResult(boolean allGranted) {
+                if (!allGranted) {
+                    if (isPermanentlyDenied(new String[]{Manifest.permission.CAMERA})) {
+                        showPermissionSettingsDialog(R.string.permission_camera_denied);
+                    }
+                    return;
+                }
+
+                Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+                ComponentName cameraPkg = intent.resolveActivity(getPackageManager());
+
+                if (cameraPkg == null) {
+                    handleProblem("Can't find camera device", null);
+                    return;
+                }
+                Logger.d("Camera package is " + cameraPkg.toString());
+
+                File videoOutput = getVideoOutput();
+                if (videoOutput.exists()) {
+                    videoOutput.delete();
+                }
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, getSurveyor().getUriForFile(videoOutput));
+                intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
+                try {
+                    startActivityForResult(intent, RESULT_VIDEO);
+                } catch (ActivityNotFoundException e) {
+                    handleProblem("Can't find camera device", null);
+                }
+            }
+        });
     }
 
     /**
      * Captures an audio recording from the microphone
      */
     private void captureAudio() {
-        Permiso.getInstance().requestPermissions(new Permiso.IOnPermissionResult() {
+        requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, R.string.permission_record, new PermissionCallback() {
             @Override
-            @SuppressWarnings("ResourceType")
-            public void onPermissionResult(Permiso.ResultSet resultSet) {
-                if (resultSet.areAllPermissionsGranted()) {
-                    Intent intent = new Intent(RunActivity.this, CaptureAudioActivity.class);
-                    intent.putExtra(SurveyorIntent.EXTRA_MEDIA_FILE, getAudioOutput().getAbsolutePath());
-                    intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                    startActivityForResult(intent, RESULT_AUDIO);
+            public void onPermissionsResult(boolean allGranted) {
+                if (!allGranted) {
+                    if (isPermanentlyDenied(new String[]{Manifest.permission.RECORD_AUDIO})) {
+                        showPermissionSettingsDialog(R.string.permission_record_denied);
+                    }
+                    return;
                 }
-            }
 
-            @Override
-            public void onRationaleRequested(Permiso.IOnRationaleProvided callback, String... permissions) {
-                RunActivity.this.showRationaleDialog(R.string.permission_record, callback);
+                Intent intent = new Intent(RunActivity.this, CaptureAudioActivity.class);
+                intent.putExtra(SurveyorIntent.EXTRA_MEDIA_FILE, getAudioOutput().getAbsolutePath());
+                intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                startActivityForResult(intent, RESULT_AUDIO);
             }
-
-        }, Manifest.permission.RECORD_AUDIO);
+        });
     }
 
     /**
@@ -569,6 +609,9 @@ public class RunActivity extends BaseActivity {
         try {
             submission.complete();
 
+            // queue the submission for background sending
+            SyncScheduler.enqueue(this, getSurveyor().isSendOverWifiOnly());
+
             finish();
         } catch (IOException e) {
             Logger.e("unable to complete submission", e);
@@ -612,19 +655,14 @@ public class RunActivity extends BaseActivity {
         intent.setAction(Intent.ACTION_VIEW);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
-        switch (mediaType) {
-            case R.string.media_image:
-                intent.setDataAndType(Uri.parse(url), "image/*");
-                break;
-            case R.string.media_video:
-                intent.setDataAndType(Uri.parse(url), "video/*");
-                break;
-            case R.string.media_audio:
-                intent.setDataAndType(Uri.parse(url), "audio/*");
-                break;
-            case R.string.media_location:
-                intent.setDataAndType(Uri.parse(url), null);
-                break;
+        if (mediaType == R.string.media_image) {
+            intent.setDataAndType(Uri.parse(url), "image/*");
+        } else if (mediaType == R.string.media_video) {
+            intent.setDataAndType(Uri.parse(url), "video/*");
+        } else if (mediaType == R.string.media_audio) {
+            intent.setDataAndType(Uri.parse(url), "audio/*");
+        } else if (mediaType == R.string.media_location) {
+            intent.setDataAndType(Uri.parse(url), null);
         }
 
         startActivity(intent);

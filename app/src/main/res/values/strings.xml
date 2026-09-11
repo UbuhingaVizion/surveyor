@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">Surveyor</string>
-    <string name="support_email">support@rapidpro.io</string>
-    <string name="privacy_url">https://app.rapidpro.io/policy/</string>
+    <string name="app_name">UbuViz Surveyor</string>
+    <string name="support_email">info@ubuviz.com</string>
+    <string name="privacy_url">https://ubuviz.com/privacy</string>
 
     <!-- activity titles -->
     <string name="title_activity_login">Sign in</string>
@@ -24,6 +24,16 @@
     <string name="action_discard">Discard</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_start_flow">Start Flow</string>
+    <string name="action_flow_language">Flow language</string>
+    <string name="flow_language_format">Language: %1$s</string>
+    <string name="action_send_now">Send now</string>
+    <string name="action_send_now_count">Send now (%1$d)</string>
+    <string name="action_org_color">Organization color</string>
+    <string name="action_switch_org">Switch organization</string>
+    <string name="action_search_flows">Search flows</string>
+    <string name="action_reset_color">Reset to default</string>
+    <string name="dialog_title_org_color">Organization color</string>
+    <string name="error_no_other_orgs">You don\'t have access to any other organizations.</string>
 
     <!-- confirmation prompts -->
     <string name="confirm_org_download">Flows for this organization haven\'t been downloaded yet. Download all flows now?</string>
@@ -42,6 +52,7 @@
     <string name="error_no_orgs">Sorry, your account doesn\'t have access to submit surveys. Check with your system administrator.</string>
     <string name="error_org_refresh">A problem occurred whilst refreshing this org. Please try again later.</string>
     <string name="error_submissions_send">A problem occurred whilst sending submissions to the server. Please try again later.</string>
+    <string name="submissions_sent_toast">Submissions sent</string>
     <string name="error_google_api">A problem occurred connecting to the Google API. Please try again later.</string>
 
     <!-- chat log messages -->
@@ -57,20 +68,78 @@
     <string name="permission_camera">We need permission to access your camera in order to collect photos and videos.</string>
     <string name="permission_record">We need permission to record audio to in order to collect audio recordings.</string>
     <string name="permission_location">We need permission to access your location in order to collect GPS data.</string>
-    <string name="permission_storage">We need access to your storage in order to save your surveys that are in progress.</string>
+
+    <!-- permissions pre-flight & diagnostics -->
+    <string name="permission_label_camera">Camera</string>
+    <string name="permission_label_microphone">Microphone</string>
+    <string name="permission_label_location">Location</string>
+    <string name="permission_label_notifications">Notifications</string>
+    <string name="permission_preflight">This survey needs access to %1$s to run without interruption. Allow access before starting?</string>
+    <string name="permission_preflight_denied">Some permissions were permanently denied. Open app settings to grant them, or continue and you may be prompted again when needed.</string>
+    <string name="permission_camera_denied">Camera permission was permanently denied. Open app settings to grant it, or the question cannot be completed.</string>
+    <string name="permission_record_denied">Microphone permission was permanently denied. Open app settings to grant it, or the question cannot be completed.</string>
+    <string name="permission_location_denied">Location permission was permanently denied. Open app settings to grant it, or the question cannot be completed.</string>
+    <string name="permission_granted">Granted</string>
+    <string name="permission_denied">Denied — tap to allow</string>
+    <string name="action_open_settings">Open settings</string>
+    <string name="action_continue_anyway">Continue anyway</string>
 
     <!-- media capturing -->
     <string name="send_message">Send message</string>
     <string name="tap_to_record">Tap to Record</string>
     <string name="tap_to_capture">Tap to Capture</string>
     <string name="waiting_for_gps">Waiting for GPS…</string>
-    <string name="latitude_longitude">Lat: %.3f Long: %.3f</string>
+    <string name="latitude_longitude">Lat: %1$.3f Long: %2$.3f</string>
     <string name="accuracy_meters">Accuracy: %d meters</string>
 
     <!-- preferences -->
-    <string name="pref_default_host">https://app.rapidpro.io</string>
-    <string name="pref_title_host">RapidPro Host</string>
-    <string name="pref_summary_host">The address for your RapidPro installation</string>
+    <string name="pref_default_host">https://app.ubuviz.com</string>
+    <string name="pref_title_host">UbuViz Host</string>
+    <string name="pref_summary_host">The address for your UbuViz installation</string>
+    <string name="host_unreachable">Couldn\'t reach %1$s. Check the address and your connection.</string>
+    <string name="pref_title_send_over">Send submissions over</string>
+    <string name="pref_summary_send_over">Wi-Fi only is recommended to save data</string>
+    <string-array name="send_over_entries">
+        <item>Wi-Fi only</item>
+        <item>Wi-Fi or mobile data</item>
+    </string-array>
+    <string-array name="send_over_values">
+        <item>wifi</item>
+        <item>any</item>
+    </string-array>
+    <string name="pref_title_language">Flow language</string>
+    <string name="pref_summary_language">Language used when running flows</string>
+    <string name="language_default">Default (org language)</string>
+    <string name="pref_header_diagnostics">Diagnostics</string>
+    <string name="pref_header_permissions">Permissions</string>
+    <string name="pref_summary_permissions">Check camera, microphone, location and notification access</string>
+    <string-array name="language_entries">
+        <item>@string/language_default</item>
+        <item>English</item>
+        <item>Français</item>
+        <item>Ikirundi</item>
+    </string-array>
+    <string-array name="language_values">
+        <item></item>
+        <item>eng</item>
+        <item>fra</item>
+        <item>run</item>
+    </string-array>
+
+    <!-- background sync -->
+    <string name="send_now">Send now</string>
+    <string name="sending_submissions">Sending submissions…</string>
+    <string name="confirm_send_over_mobile">You are set to send over Wi-Fi only. Send now using mobile data?</string>
+    <string name="sync_channel_name">Submission sync</string>
+    <string name="sync_channel_desc">Background sending of survey submissions</string>
+    <string name="sync_in_progress">Sending submissions…</string>
+    <string name="sync_complete">Submissions sent</string>
+    <string name="sync_failed">Could not send submissions</string>
+
+    <!-- asset sync -->
+    <string name="never_updated">Not yet updated</string>
+    <string name="last_updated">Updated %1$s</string>
+    <string name="up_to_date">Up to date</string>
 
     <!-- miscellaneous -->
     <string name="yes">Yes</string>
@@ -124,6 +193,7 @@
     <string name="stop">Stop Recording</string>
     <string name="record">Record</string>
     <string name="camera_error">Camera Error</string>
+    <string name="audio_error">Recording Error</string>
     <string name="description_info">Description info</string>
     <string name="tag_url">tag_url</string>
     <string name="tag_handler">tag_handler</string>

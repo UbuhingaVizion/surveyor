@@ -5,12 +5,12 @@
     <gradient
         android:angle="270"
         android:centerX="35%"
-        android:endColor="@color/pending"
-        android:startColor="@color/pending"
+        android:endColor="@color/primary"
+        android:startColor="@color/primary_light"
         android:type="linear"
         />
     <corners
-        android:radius="2dp"
+        android:radius="4dp"
         />
     <padding
         android:left="0dp"

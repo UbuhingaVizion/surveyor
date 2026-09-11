@@ -176,6 +176,10 @@ public class CreateAccountActivityTest extends BaseApplicationTest {
         RecordedRequest request6 = mockServer.takeRequest();
         assertThat(request6.getPath(), is("/api/v2/org.json"));
 
+        // login happens on a background executor and then launches the org activity on the main
+        // thread, so give it a moment to complete before checking the intent
+        pause();
+
         intended(hasComponent(OrgActivity.class.getName()));
     }
 

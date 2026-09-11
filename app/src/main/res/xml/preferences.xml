@@ -9,6 +9,31 @@
             android:title="@string/pref_title_host"
             android:summary="@string/pref_summary_host"/>
 
+        <ListPreference
+            android:key="send_over"
+            android:defaultValue="wifi"
+            android:title="@string/pref_title_send_over"
+            android:summary="@string/pref_summary_send_over"
+            android:entries="@array/send_over_entries"
+            android:entryValues="@array/send_over_values"/>
+
+        <ListPreference
+            android:key="language"
+            android:defaultValue=""
+            android:title="@string/pref_title_language"
+            android:summary="@string/pref_summary_language"
+            android:entries="@array/language_entries"
+            android:entryValues="@array/language_values"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_header_diagnostics">
+
+        <Preference
+            android:key="permissions"
+            android:title="@string/pref_header_permissions"
+            android:summary="@string/pref_summary_permissions"/>
+
     </PreferenceCategory>
 
 </PreferenceScreen>

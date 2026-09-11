@@ -1,7 +1,6 @@
 package io.rapidpro.surveyor.fragment;
 
-import android.app.Activity;
-import android.app.Fragment;
+import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,6 +10,9 @@ import android.widget.AdapterView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 
+import androidx.fragment.app.Fragment;
+
+import java.util.Collections;
 import java.util.List;
 
 import io.rapidpro.surveyor.R;
@@ -32,9 +34,12 @@ public class OrgListFragment extends Fragment implements AbsListView.OnItemClick
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        List<Org> items = container.getListItems();
+        List<Org> items = container != null ? container.getListItems() : null;
+        if (items == null) {
+            items = Collections.emptyList();
+        }
 
-        adapter = new OrgListAdapter(getActivity(), R.layout.item_org, items);
+        adapter = new OrgListAdapter(requireContext(), R.layout.item_org, items);
     }
 
     @Override
@@ -47,12 +52,12 @@ public class OrgListFragment extends Fragment implements AbsListView.OnItemClick
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
+    public void onAttach(Context context) {
+        super.onAttach(context);
         try {
-            container = (Container) activity;
+            container = (Container) context;
         } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString() + " must implement OrgListFragment.Container");
+            throw new ClassCastException(context.toString() + " must implement OrgListFragment.Container");
         }
     }
 

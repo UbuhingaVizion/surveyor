@@ -19,6 +19,8 @@ import io.rapidpro.surveyor.data.OrgService;
 import io.rapidpro.surveyor.data.SubmissionService;
 import io.rapidpro.surveyor.net.TembaService;
 import io.rapidpro.surveyor.utils.SurveyUtils;
+import io.rapidpro.surveyor.work.SyncNotifier;
+import io.rapidpro.surveyor.work.SyncScheduler;
 
 /**
  * Main application
@@ -64,7 +66,7 @@ public class SurveyorApplication extends Application {
 
         s_this = this;
 
-        tembaService = new TembaService(getTembaHost());
+        tembaService = new TembaService(getTembaHost(), getCacheDir());
 
         try {
             orgService = new OrgService(getOrgsDirectory());
@@ -72,6 +74,22 @@ public class SurveyorApplication extends Application {
         } catch (IOException e) {
             Logger.e("Unable to create directory based services", e);
         }
+
+        // set up background sync (notifications + schedule any pending submissions)
+        try {
+            SyncNotifier.createChannels(this);
+            SyncScheduler.enqueue(this, isSendOverWifiOnly());
+        } catch (Exception e) {
+            Logger.e("Unable to initialise background sync", e);
+        }
+    }
+
+    /**
+     * Gets whether submissions should only be sent over Wi-Fi (default) rather than mobile data
+     */
+    public boolean isSendOverWifiOnly() {
+        String value = getPreferences().getString(SurveyorPreferences.SEND_OVER, SurveyorPreferences.SEND_OVER_WIFI);
+        return !SurveyorPreferences.SEND_OVER_ANY.equals(value);
     }
 
     /**
@@ -127,7 +145,7 @@ public class SurveyorApplication extends Application {
      * @return the base URL
      */
     public String getTembaHost() {
-        String host = getPreferences().getString(SurveyorPreferences.HOST, getString(R.string.pref_default_host));
+        String host = getPreferences().getString(SurveyorPreferences.HOST, getDefaultHost());
 
         // strip any trailing slash
         if (host.endsWith("/")) {
@@ -135,6 +153,17 @@ public class SurveyorApplication extends Application {
         }
 
         return host;
+    }
+
+    /**
+     * The default RapidPro host. In debug builds this can be overridden at build time with
+     * -PdebugHost=... (useful for pointing test builds at an ngrok tunnel).
+     */
+    private String getDefaultHost() {
+        if (BuildConfig.DEBUG && BuildConfig.DEBUG_HOST != null && !BuildConfig.DEBUG_HOST.isEmpty()) {
+            return BuildConfig.DEBUG_HOST;
+        }
+        return getString(R.string.pref_default_host);
     }
 
     /**
@@ -152,8 +181,9 @@ public class SurveyorApplication extends Application {
         } catch (IOException e) {
             Logger.e("Unable to clear submissions", e);
         }
+        SyncScheduler.cancelAll(this);
 
-        tembaService = new TembaService(newHost);
+        tembaService = new TembaService(newHost, getCacheDir());
     }
 
     /**

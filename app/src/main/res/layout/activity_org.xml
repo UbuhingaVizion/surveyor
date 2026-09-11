@@ -24,7 +24,7 @@
             android:minWidth="80dp"
             android:minHeight="0dp"
             android:onClick="onActionSubmit"
-            android:text="3,122"
+            android:text="@string/action_send_now"
             android:textColor="@color/pending_button_text"
             android:textSize="18dp"
             android:textStyle="bold" />
@@ -43,12 +43,26 @@
 
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/text_last_updated"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:background="@color/pending_background"
+        android:paddingStart="12dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="6dp"
+        android:text="@string/never_updated"
+        android:textColor="@color/pending_text"
+        android:textSize="12sp" />
+
     <LinearLayout
         android:id="@+id/fragment_container"
-        android:name="io.rapidpro.surveyor.fragment.FlowListFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/container_pending"
+        android:layout_below="@+id/text_last_updated"
         android:orientation="vertical"
         tools:layout="@layout/fragment_list" />
 

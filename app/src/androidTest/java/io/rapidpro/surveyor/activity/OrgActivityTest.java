@@ -141,7 +141,7 @@ public class OrgActivityTest extends BaseApplicationTest {
         rule.launchActivity(intent);
 
         onView(withId(R.id.container_pending)).check(matches(isDisplayed()));
-        onView(withId(R.id.button_pending)).check(matches(withText("2")));
+        onView(withId(R.id.button_pending)).check(matches(withText(getSurveyor().getString(R.string.action_send_now_count, 2))));
     }
 
     @Test

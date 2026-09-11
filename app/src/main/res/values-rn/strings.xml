@@ -1,0 +1,168 @@
+<resources>
+    <!-- Kirundi (Rundi) translations. Technical/legal wording reviewed by a native speaker recommended. -->
+
+    <!-- activity titles -->
+    <string name="title_activity_login">Kwinjira</string>
+    <string name="title_activity_create_account">Fungura konti</string>
+    <string name="title_activity_org_choose">Hitanya umuryango</string>
+    <string name="title_activity_org">Umuryango</string>
+    <string name="title_activity_flow">Amakuru ya Flow</string>
+    <string name="title_activity_run">Tangira Flow</string>
+    <string name="title_activity_audio">Fata ijwi</string>
+    <string name="title_activity_video">Fata videwo</string>
+    <string name="title_activity_location">Fata ahantu</string>
+
+    <!-- menu items and buttons -->
+    <string name="action_settings">Imitunganyirize</string>
+    <string name="action_logout">Sohoka</string>
+    <string name="action_refresh">Vugurura</string>
+    <string name="action_privacy">Ibanga</string>
+    <string name="action_bug_report">Tanga ikibazo</string>
+    <string name="action_save">Bika</string>
+    <string name="action_discard">Naga</string>
+    <string name="action_cancel">Hagarika</string>
+    <string name="action_start_flow">Tangira Flow</string>
+    <string name="action_flow_language">Ururimi rw’iyi flow</string>
+    <string name="flow_language_format">Ururimi: %1$s</string>
+    <string name="action_send_now">Ohereza ubu</string>
+    <string name="action_send_now_count">Ohereza ubu (%1$d)</string>
+    <string name="action_org_color">Ibara ry’ishirahamwe</string>
+    <string name="action_switch_org">Hindura ishirahamwe</string>
+    <string name="action_search_flows">Shakisha flows</string>
+    <string name="action_reset_color">Subiza ibara risanzwe</string>
+    <string name="dialog_title_org_color">Ibara ry’ishirahamwe</string>
+    <string name="error_no_other_orgs">Nta shirahamwe rindi ufise uburenganzira bwaho.</string>
+
+    <!-- confirmation prompts -->
+    <string name="confirm_org_download">Flows z’uyu muryango ntizirabikwa na rimwe. Vibike ubu zose ?</string>
+    <string name="confirm_org_refresh">Vugurura flows zose z’uyu muryango ?</string>
+    <string name="confirm_org_refresh_old">Flows z’uyu muryango zarasheye cane ntizikorana na iyi version ya Surveyor. Vugurura flows zose z’uyu muryango ?</string>
+    <string name="confirm_bug_report">Ehe, Surveyor ifise ikibazo. Urashaka kohereza raporo y’ikibazo kugira ngo turushungure ?</string>
+    <string name="confirm_submission_discard">Urabeza ko ushaka kunaga amakuru yakusanyjiwe ?</string>
+    <string name="confirm_send_submissions">Urabeza ko ushaka kohereza ibisubizo ku seriveri ?</string>
+    <string name="confirm_logout_with_submissions">Ufise ibisubizo bitarungikwa bizotakara niwasohoka. Urabeza ?</string>
+
+    <!-- error messages -->
+    <string name="error_server_not_found">Seriveri ntiboneka. Reba imitunganyirize yawe cyangwa wongere ugerageze.</string>
+    <string name="error_server_failure">Seriveri ifise ikibazo, wongere ugerageze.</string>
+    <string name="error_invalid_login">Kwinjira ntibishobotse. Reba izina ryawe n’ijambobanga hanyuma wongere ugerageze.</string>
+    <string name="error_fetching_org">Ntushobora kubona amakuru y’umuryango. Reba imitunganyirize yawe cyangwa wongere ugerageze.</string>
+    <string name="error_no_orgs">Ihangane, konti yawe nta burenganzira bwo kohereza ubushakashatsi. Baza umuyobozi wawe.</string>
+    <string name="error_org_refresh">Habonetse ikibazo mu guvugurura uyu muryango. Wongera ugerageze.</string>
+    <string name="error_submissions_send">Habonetse ikibazo mu kohereza ibisubizo ku seriveri. Wongera ugerageze.</string>
+    <string name="submissions_sent_toast">Ibisubizo byarungitswe</string>
+    <string name="error_google_api">Habonetse ikibazo mu kwihuza na Google API. Wongera ugerageze.</string>
+
+    <!-- chat log messages -->
+    <string name="log_flow_complete">Flow irangiye</string>
+
+    <!-- chat media -->
+    <string name="request_image">Fata ifoto</string>
+    <string name="request_video">Fata videwo</string>
+    <string name="request_audio">Andika ijwi</string>
+    <string name="request_gps">Tangaza aho uri</string>
+
+    <!-- permission rationales -->
+    <string name="permission_camera">Dukeneye uburenganzira bwo gukoresha kamera yawe kugira ngo twakusanye ifoto na videwo.</string>
+    <string name="permission_record">Dukeneye uburenganzira bwo kwandika ijwi kugira ngo twakusanye amajwi.</string>
+    <string name="permission_location">Dukeneye uburenganzira bwo kumenya aho uri kugira ngo twakusanye amakuru ya GPS.</string>
+
+    <!-- permissions pre-flight & diagnostics -->
+    <string name="permission_label_camera">Kamera</string>
+    <string name="permission_label_microphone">Mikoro</string>
+    <string name="permission_label_location">Aho uri</string>
+    <string name="permission_label_notifications">Imenyesha</string>
+    <string name="permission_preflight">Iyi nkuru ikeneye uburenganzira kuri: %1$s kugira ngo ikore nta guhagarara. Urahe uburenganzira imbere yo gutangura?</string>
+    <string name="permission_preflight_denied">Hari uburenganzira bwansegewe burundu. Fungura igenamiterere ry’porogaramu kugira ubwemere, canke ukomeze — ushobora kuzosubizwa mu gihe gikwiye.</string>
+    <string name="permission_camera_denied">Uburenganzira bwa kamera bwansegewe burundu. Fungura igenamiterere ry’porogaramu kugira ubwemere, ahandiho ikibazo ntigishobora kurangira.</string>
+    <string name="permission_record_denied">Uburenganzira bwa mikoro bwansegewe burundu. Fungura igenamiterere ry’porogaramu kugira ubwemere, ahandiho ikibazo ntigishobora kurangira.</string>
+    <string name="permission_location_denied">Uburenganzira bw’aho uri bwansegewe burundu. Fungura igenamiterere ry’porogaramu kugira ubwemere, ahandiho ikibazo ntigishobora kurangira.</string>
+    <string name="permission_granted">Yatanzwe</string>
+    <string name="permission_denied">Yanse — kanda kugira uyemere</string>
+    <string name="action_open_settings">Fungura igenamiterere</string>
+    <string name="action_continue_anyway">Komeza ukomeye</string>
+
+    <!-- media capturing -->
+    <string name="send_message">Kohereza ubutumwa</string>
+    <string name="tap_to_record">Kanda wandike</string>
+    <string name="tap_to_capture">Kanda ufake</string>
+    <string name="waiting_for_gps">Turategereje GPS…</string>
+    <string name="latitude_longitude">Lat : %1$.3f Long : %2$.3f</string>
+    <string name="accuracy_meters">Ubutinyuka : %d metero</string>
+
+    <!-- preferences -->
+    <string name="pref_default_host">https://app.ubuviz.com</string>
+    <string name="pref_title_host">Seriveri ya UbuViz</string>
+    <string name="pref_summary_host">Aderesi ya seriveri yawe ya UbuViz</string>
+    <string name="host_unreachable">Ntivyashobotse kugera kuri %1$s. Raba aderesi n’umurongo wawe.</string>
+
+    <string name="pref_title_send_over">Kohereza ibisubizo ukoresheje</string>
+    <string name="pref_summary_send_over">Wi-Fi gusa ni vyiza kugira ngo utazimiza amakuru</string>
+    <string-array name="send_over_entries">
+        <item>Wi-Fi gusa</item>
+        <item>Wi-Fi canke data ya telefone</item>
+    </string-array>
+    <string-array name="send_over_values">
+        <item>wifi</item>
+        <item>any</item>
+    </string-array>
+    <string name="pref_title_language">Ururimi rw’iyi flow</string>
+    <string name="pref_summary_language">Ururimi rukoreshwa mu gukora flows</string>
+    <string name="language_default">Uko bisanzwe (ururimi rw’ishirahamwe)</string>
+    <string name="pref_header_diagnostics">Isuzuma</string>
+    <string name="pref_header_permissions">Uburenganzira</string>
+    <string name="pref_summary_permissions">Raba uburenganzira bwa kamera, mikoro, aho uri n’imenyesha</string>
+
+    <!-- background sync -->
+    <string name="send_now">Ohereza ubu</string>
+    <string name="sending_submissions">Turiko turahereza ibisubizo…</string>
+    <string name="confirm_send_over_mobile">Wagenyeye kohereza kuri Wi-Fi gusa. Kohereza ubu ukoresheje data ya telefone?</string>
+    <string name="sync_channel_name">Guhuza ibisubizo</string>
+    <string name="sync_channel_desc">Kohereza ibisubizo mu nyuma</string>
+    <string name="sync_in_progress">Turiko turahereza ibisubizo…</string>
+    <string name="sync_complete">Ibisubizo byoherejwe</string>
+    <string name="sync_failed">Ntibishobotse kohereza ibisubizo</string>
+
+    <!-- asset sync -->
+    <string name="never_updated">Ntivugururwa na rimwe</string>
+    <string name="last_updated">Byavuguruwe %1$s</string>
+    <string name="up_to_date">Nta co cahindutse</string>
+
+    <!-- miscellaneous -->
+    <string name="yes">Ego</string>
+    <string name="no">Oya</string>
+    <plurals name="questions">
+        <item quantity="other">%d ibibazo</item>
+    </plurals>
+    <plurals name="submissions_sent">
+        <item quantity="other">%d raporo zoherejwe</item>
+    </plurals>
+
+    <!-- TODO clean up -->
+    <string name="submit_body">Kohereza ibikorwa vya Flow ku seriveri.</string>
+    <string name="refresh_org">Kuvugurura amakuru y’umuryango...</string>
+    <string name="action_delete">Kuraho</string>
+    <string name="action_submit">Kohereza</string>
+    <string name="pending_summary_flow">Ufise ibisubizo bitararungikwa by’iyi flow kugira ngo bibikwe ku seriveri.</string>
+    <string name="pending_summary">Ufise ibisubizo bitararungikwa kugira ngo bibikwe ku seriveri.</string>
+    <string name="one_moment">Gake gato</string>
+    <string name="unsupported_version">Version yawe ya Surveyor ishaje cane ntishobora gukora izi flows. Urashaka gushikana version nshasha ?</string>
+    <string name="please_login_again">Subira winjire muri konti yawe.</string>
+    <string name="intro_message">Ubutumwa bw’intango</string>
+    <string name="stop">Hagarika kwandika</string>
+    <string name="record">Andika</string>
+    <string name="camera_error">Kamera ifise ikibazo</string>
+    <string name="audio_error">Ikibazo mu kwandika ijwi</string>
+    <string name="description_info">Ibisobanuro</string>
+
+    <string name="tap_to_stop">Kwandika. Kanda uhagarike.</string>
+    <string name="quit">Sohoka</string>
+    <string name="settings">Imitunganyirize</string>
+    <string name="title_permissions">Uburenganzira</string>
+    <string name="location_unavailable">Aho uri ntiboneka ubu. Wongera ugerageze.</string>
+    <string name="made_recording">Wanditse ijwi</string>
+    <string name="error_invalid_host">Ihangane, seriveri ntaboneka. Wongera ugerageze.</string>
+    <string name="web_load_failure">Reba isanduku yawe ya interineti hanyuma wongere ugerageze.</string>
+    <string name="error_network">Ntushobora kwihuza na seriveri. Reba isanduku yawe ya interineti hanyuma wongere ugerageze.</string>
+
+</resources>

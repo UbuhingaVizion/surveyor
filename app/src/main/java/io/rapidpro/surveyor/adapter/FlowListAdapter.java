@@ -6,24 +6,66 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Filter;
 import android.widget.TextView;
 
 import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import io.rapidpro.surveyor.R;
-import io.rapidpro.surveyor.SurveyorApplication;
 import io.rapidpro.surveyor.data.Flow;
-import io.rapidpro.surveyor.data.Org;
 
 public class FlowListAdapter extends ArrayAdapter<Flow> {
 
-    private Org org;
+    private final List<Flow> allFlows;
 
-    public FlowListAdapter(Context context, int resourceId, Org org, List<Flow> flows) {
+    private Map<String, Integer> pendingCounts = new HashMap<>();
+
+    public FlowListAdapter(Context context, int resourceId, List<Flow> flows) {
         super(context, resourceId, flows);
 
-        this.org = org;
+        this.allFlows = new ArrayList<>(flows);
+    }
+
+    /**
+     * Sets the pre-computed pending submission counts by flow UUID (avoids per-row disk access)
+     */
+    public void setPendingCounts(Map<String, Integer> counts) {
+        this.pendingCounts = counts != null ? counts : new HashMap<>();
+        notifyDataSetChanged();
+    }
+
+    @Override
+    public Filter getFilter() {
+        return new Filter() {
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+                String query = constraint == null ? "" : constraint.toString().trim().toLowerCase();
+
+                List<Flow> filtered = new ArrayList<>();
+                for (Flow flow : allFlows) {
+                    if (query.isEmpty() || flow.getName().toLowerCase().contains(query)) {
+                        filtered.add(flow);
+                    }
+                }
+
+                FilterResults results = new FilterResults();
+                results.values = filtered;
+                results.count = filtered.size();
+                return results;
+            }
+
+            @SuppressWarnings("unchecked")
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+                clear();
+                addAll((List<Flow>) results.values);
+                notifyDataSetChanged();
+            }
+        };
     }
 
     @Override
@@ -49,7 +91,8 @@ public class FlowListAdapter extends ArrayAdapter<Flow> {
         Flow flow = getItem(position);
         cache.titleView.setText(flow.getName());
 
-        int pending = SurveyorApplication.get().getSubmissionService().getCompletedCount(org, flow);
+        Integer pendingCount = pendingCounts.get(flow.getUuid());
+        int pending = pendingCount == null ? 0 : pendingCount;
 
         NumberFormat nf = NumberFormat.getInstance();
         cache.pendingSubmissions.setText(nf.format(pending));

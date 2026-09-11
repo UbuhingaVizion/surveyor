@@ -76,6 +76,20 @@ public class SubmissionService {
         return pending;
     }
 
+    /**
+     * Return the completed submissions across all the given orgs
+     *
+     * @param orgs the orgs
+     * @return the submissions
+     */
+    public List<Submission> getCompleted(List<Org> orgs) {
+        List<Submission> pending = new ArrayList<>();
+        for (Org org : orgs) {
+            pending.addAll(getCompleted(org));
+        }
+        return pending;
+    }
+
     private List<Submission> getAll(Org org, Flow flow) {
         List<Submission> all = new ArrayList<>();
         File orgDir = new File(rootDir, org.getUuid());
@@ -115,6 +129,30 @@ public class SubmissionService {
             }
         }
         return completed;
+    }
+
+    /**
+     * Gets the most recent upload error for any un-submitted submission in the org (or null)
+     *
+     * @param org the org
+     * @return the error message or null
+     */
+    public String getLastError(Org org) {
+        for (Flow flow : org.getFlows()) {
+            for (Submission sub : getCompleted(org, flow)) {
+                try {
+                    UploadState state = sub.getUploadState();
+                    if (!state.isSubmitted()) {
+                        String error = state.getLastError();
+                        if (error != null && !error.isEmpty()) {
+                            return error;
+                        }
+                    }
+                } catch (IOException ignored) {
+                }
+            }
+        }
+        return null;
     }
 
     /**

@@ -1,20 +1,27 @@
 package io.rapidpro.surveyor.activity;
 
 import android.Manifest;
+import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Looper;
 import android.view.View;
 import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.greysonparrelli.permiso.Permiso;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import io.rapidpro.surveyor.Logger;
 import io.rapidpro.surveyor.R;
@@ -22,12 +29,16 @@ import io.rapidpro.surveyor.ui.IconTextView;
 
 /**
  * Activity for capturing a GPS location
+ *
+ * Uses Google Play Services (FusedLocationProvider) when available, and falls back to the
+ * platform LocationManager for devices without Google Play Services (e.g. low cost field phones).
  */
-public class CaptureLocationActivity extends BaseActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class CaptureLocationActivity extends BaseActivity {
 
-    private GoogleApiClient googleApiClient;
     private FusedLocationProviderClient locationApiClient;
     private LocationCallback locationCallback;
+    private LocationManager locationManager;
+    private LocationListener locationListener;
     private Location lastLocation;
 
     @Override
@@ -36,32 +47,33 @@ public class CaptureLocationActivity extends BaseActivity implements GoogleApiCl
 
         setContentView(R.layout.activity_capture_location);
 
-        Permiso.getInstance().requestPermissions(new Permiso.IOnPermissionResult() {
-            @Override
-            @SuppressWarnings("ResourceType")
-            public void onPermissionResult(Permiso.ResultSet resultSet) {
-                if (resultSet.areAllPermissionsGranted()) {
-                    connectGoogleApi();
-                } else {
-                    finish();
-                }
-            }
-
-            @Override
-            public void onRationaleRequested(Permiso.IOnRationaleProvided callback, String... permissions) {
-                CaptureLocationActivity.this.showRationaleDialog(R.string.permission_location, callback);
-            }
-        }, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION);
-
+        // must be initialised before requesting permissions: when permission is already granted
+        // the callback fires synchronously and startLocationUpdates() needs this listener
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 if (locationResult != null) {
                     onLocationUpdate(locationResult.getLastLocation());
-                    ;
                 }
             }
         };
+
+        final String[] locationPermissions = {
+                Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
+
+        requestPermissions(locationPermissions, R.string.permission_location, new PermissionCallback() {
+            @Override
+            public void onPermissionsResult(boolean allGranted) {
+                if (allGranted) {
+                    onPermissionsGranted();
+                } else if (isPermanentlyDenied(locationPermissions)) {
+                    AlertDialog dialog = showPermissionSettingsDialog(R.string.permission_location_denied);
+                    dialog.setOnDismissListener(d -> finish());
+                } else {
+                    finish();
+                }
+            }
+        });
     }
 
     @Override
@@ -76,22 +88,91 @@ public class CaptureLocationActivity extends BaseActivity implements GoogleApiCl
         stopLocationUpdates();
     }
 
-    protected void connectGoogleApi() {
-        googleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
-
-        googleApiClient.connect();
+    protected void onPermissionsGranted() {
+        if (isGooglePlayServicesAvailable()) {
+            startLocationUpdates();
+        } else {
+            startLocationManagerUpdates();
+        }
     }
 
     /**
-     * Start receiving location updates
+     * Gets whether Google Play Services is available on this device
+     */
+    protected boolean isGooglePlayServicesAvailable() {
+        return GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this) == ConnectionResult.SUCCESS;
+    }
+
+    /**
+     * Fallback for devices without Google Play Services - uses the platform location providers
+     */
+    @SuppressWarnings("MissingPermission")
+    protected void startLocationManagerUpdates() {
+        Logger.d("Starting location manager updates...");
+
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                onLocationUpdate(location);
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+            }
+
+            @Override
+            public void onProviderEnabled(String provider) {
+            }
+
+            @Override
+            public void onProviderDisabled(String provider) {
+            }
+        };
+
+        List<String> providers = new ArrayList<>();
+        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            providers.add(LocationManager.GPS_PROVIDER);
+        }
+        if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+            providers.add(LocationManager.NETWORK_PROVIDER);
+        }
+
+        if (providers.isEmpty()) {
+            Logger.d("No location providers enabled");
+            showToast(R.string.location_unavailable);
+            finish();
+            return;
+        }
+
+        try {
+            for (String provider : providers) {
+                locationManager.requestLocationUpdates(provider, 2000, 0, locationListener, Looper.getMainLooper());
+
+                Location lastKnown = locationManager.getLastKnownLocation(provider);
+                if (lastKnown != null) {
+                    onLocationUpdate(lastKnown);
+                }
+            }
+        } catch (SecurityException e) {
+            Logger.e("Unable to request location updates", e);
+            showToast(R.string.error_google_api);
+            finish();
+        }
+    }
+
+    /**
+     * Start receiving location updates from Google Play Services
      */
     @SuppressWarnings("ResourceType")
     private void startLocationUpdates() {
         Logger.d("Starting location updates...");
+
+        if (locationCallback == null) {
+            Logger.d("Location callback not initialised");
+            finish();
+            return;
+        }
 
         IconTextView button = (IconTextView) getViewCache().getView(R.id.button_capture);
         button.setText(R.string.icon_gps_not_fixed);
@@ -102,7 +183,14 @@ public class CaptureLocationActivity extends BaseActivity implements GoogleApiCl
         request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
         locationApiClient = LocationServices.getFusedLocationProviderClient(this);
-        locationApiClient.requestLocationUpdates(request, locationCallback, null);
+
+        try {
+            locationApiClient.requestLocationUpdates(request, locationCallback, null);
+        } catch (SecurityException e) {
+            Logger.e("Unable to request fused location updates", e);
+            showToast(R.string.error_google_api);
+            finish();
+        }
     }
 
     private void onLocationUpdate(Location location) {
@@ -143,27 +231,13 @@ public class CaptureLocationActivity extends BaseActivity implements GoogleApiCl
      */
     protected void stopLocationUpdates() {
         if (locationApiClient != null) {
-            locationApiClient.removeLocationUpdates(locationCallback);
+            if (locationCallback != null) {
+                locationApiClient.removeLocationUpdates(locationCallback);
+            }
+            locationApiClient = null;
         }
-    }
-
-    @Override
-    public void onConnected(Bundle bundle) {
-        Logger.d("GoogleAPI client connected");
-
-        startLocationUpdates();
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-        Logger.d("GoogleAPI client suspended");
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        Logger.d("GoogleAPI client failed");
-
-        showToast(R.string.error_google_api);
-        finish();
+        if (locationManager != null && locationListener != null) {
+            locationManager.removeUpdates(locationListener);
+        }
     }
 }

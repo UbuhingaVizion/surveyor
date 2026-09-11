@@ -7,10 +7,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +31,7 @@ import io.rapidpro.surveyor.net.responses.PaginatedResults;
 import io.rapidpro.surveyor.net.responses.TokenResults;
 import io.rapidpro.surveyor.utils.JsonUtils;
 import io.rapidpro.surveyor.utils.RawJson;
+import okhttp3.Cache;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
@@ -47,7 +47,11 @@ public class TembaService {
     private TembaAPI api;
 
     public TembaService(String host) {
-        this.api = createRetrofit(host).create(TembaAPI.class);
+        this(host, null);
+    }
+
+    public TembaService(String host, File cacheDir) {
+        this.api = createRetrofit(host, cacheDir).create(TembaAPI.class);
     }
 
     /**
@@ -57,14 +61,21 @@ public class TembaService {
         return "Token " + token;
     }
 
-    private static Retrofit createRetrofit(String host) {
+    private static Retrofit createRetrofit(String host, File cacheDir) {
 
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
                 .readTimeout(60, TimeUnit.SECONDS)
-                .connectTimeout(60, TimeUnit.SECONDS);
+                .connectTimeout(60, TimeUnit.SECONDS)
+                .writeTimeout(120, TimeUnit.SECONDS)
+                .addInterceptor(new RetryInterceptor(2));
+
+        // disk cache (80 MB) - lets us take advantage of any conditional GET support on the server
+        if (cacheDir != null) {
+            builder.cache(new Cache(cacheDir, 80L * 1024 * 1024));
+        }
 
         // add extra logging for debug mode
         if (BuildConfig.DEBUG) {
@@ -173,12 +184,20 @@ public class TembaService {
      * @param flows the list of flows
      */
     public List<RawJson> getDefinitions(final String token, final List<Flow> flows) throws TembaException {
-        // gather up flow UUIDs
-        final List<String> flowUUIDs = new ArrayList<>(flows.size());
+        List<String> flowUUIDs = new ArrayList<>(flows.size());
         for (Flow flow : flows) {
             flowUUIDs.add(flow.getUuid());
         }
+        return getDefinitionsForUuids(token, flowUUIDs);
+    }
 
+    /**
+     * Gets full definitions for the given flow UUIDs (used for incremental sync)
+     *
+     * @param token     the authentication token
+     * @param flowUUIDs the flow UUIDs to fetch
+     */
+    public List<RawJson> getDefinitionsForUuids(String token, List<String> flowUUIDs) throws TembaException {
         try {
             Response<Definitions> response = api.getDefinitions(asAuth(token), flowUUIDs, "none").execute();
             checkResponse(response);
@@ -203,25 +222,35 @@ public class TembaService {
         String baseName = FilenameUtils.getBaseName(uriString);
         String extension = FilenameUtils.getExtension(uriString);
 
-        // build multipart request
+        // build multipart request - stream the media from its content URI (no heap buffering)
         Map<String, RequestBody> map = new HashMap<>();
-        map.put("extension", RequestBody.create(MediaType.parse("text/plain"), extension));
+        map.put("extension", RequestBody.create(extension, MediaType.get("text/plain")));
+
+        RequestBody fileBody = ContentUriRequestBody.forUri(
+                SurveyorApplication.get().getContentResolver(), uri, MediaType.get("multipart/form-data"));
+        map.put("media_file\"; filename=\"" + baseName, fileBody);
 
         try {
-            InputStream stream = SurveyorApplication.get().getContentResolver().openInputStream(uri);
-            byte[] bytes = IOUtils.toByteArray(stream);
-
-            RequestBody fileBody = RequestBody.create(MediaType.parse("multipart/form-data"), bytes);
-            map.put("media_file\"; filename=\"" + baseName, fileBody);
-
             Response<JsonObject> result = api.uploadMedia(asAuth(token), map).execute();
             checkResponse(result);
 
             return result.body().get("location").getAsString();
 
         } catch (IOException e) {
-            throw new TembaException("Error uploading media", e);
+            throw new TembaException(errorMessage("Error uploading media", e), e);
         }
+    }
+
+    /**
+     * Builds an error message that includes the root cause (e.g. "Unable to resolve host ...")
+     */
+    private static String errorMessage(String context, IOException e) {
+        Throwable cause = e;
+        while (cause.getCause() != null && cause.getCause() != cause) {
+            cause = cause.getCause();
+        }
+        String detail = cause.getMessage();
+        return detail == null || detail.isEmpty() ? context : context + ": " + detail;
     }
 
     /**
@@ -236,7 +265,7 @@ public class TembaService {
             checkResponse(result);
 
         } catch (IOException e) {
-            throw new TembaException("Error submitting", e);
+            throw new TembaException(errorMessage("Error submitting", e), e);
         }
     }
 

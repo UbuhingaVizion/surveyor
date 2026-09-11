@@ -22,6 +22,9 @@ public class Flow {
     @SerializedName("question_count")
     private int questionCount;
 
+    @SerializedName("modified_on")
+    private String modifiedOn;
+
     /**
      * Creates a new flow
      *
@@ -109,6 +112,14 @@ public class Flow {
 
     public int getQuestionCount() {
         return questionCount;
+    }
+
+    public String getModifiedOn() {
+        return modifiedOn;
+    }
+
+    public void setModifiedOn(String modifiedOn) {
+        this.modifiedOn = modifiedOn;
     }
 
     public FlowReference toReference() {
