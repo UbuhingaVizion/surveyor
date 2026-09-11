@@ -3,7 +3,6 @@ package io.rapidpro.surveyor.net;
 import android.net.Uri;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import org.apache.commons.io.FilenameUtils;
@@ -303,7 +302,7 @@ public class TembaService {
 
             String errorBody;
             try {
-                errorBody = response.errorBody().string();
+                errorBody = response.errorBody() != null ? response.errorBody().string() : "";
             } catch (Exception e) {
                 throw new TembaException("Unable to extract error body", e);
             }
@@ -311,22 +310,26 @@ public class TembaService {
             // make a note of the error in our log
             Logger.w(errorBody);
 
-            // see if the server had anything interesting to say
-            Gson gson = new Gson();
-            JsonObject error = gson.fromJson(errorBody, JsonObject.class);
-            if (error != null) {
-                JsonElement detail = error.get("detail");
-                if (detail != null) {
-
-                    String message = detail.getAsString();
-                    if (message.equals("Invalid token")) {
+            // see if the server had anything interesting to say (it may not be JSON at all,
+            // e.g. an nginx/proxy HTML error page, so never let parsing mask the real status)
+            try {
+                JsonObject error = new Gson().fromJson(errorBody, JsonObject.class);
+                if (error != null && error.has("detail")) {
+                    String message = error.get("detail").getAsString();
+                    if ("Invalid token".equals(message)) {
                         message = "Login failure, please logout and try again.";
                     }
                     throw new TembaException(message);
                 }
+            } catch (TembaException e) {
+                throw e;
+            } catch (Exception ignored) {
+                // not a JSON object - fall through to a status-based message
             }
 
-            throw new TembaException("Error reading response");
+            String path = response.raw() != null && response.raw().request() != null
+                    ? response.raw().request().url().encodedPath() : "";
+            throw new TembaException("Server returned HTTP " + response.code() + (path.isEmpty() ? "" : " for " + path));
         }
     }
 
