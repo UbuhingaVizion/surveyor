@@ -4,13 +4,12 @@ import android.os.Bundle;
 
 import androidx.fragment.app.FragmentTransaction;
 
-import io.rapidpro.surveyor.fragment.SettingsFragment;
-
+import io.rapidpro.surveyor.fragment.PermissionsFragment;
 
 /**
- * Activity for modifying app settings
+ * Screen showing the status of the runtime permissions Surveyor needs
  */
-public class SettingsActivity extends BaseActivity {
+public class PermissionsActivity extends BaseActivity {
 
     public boolean requireLogin() {
         return false;
@@ -19,10 +18,9 @@ public class SettingsActivity extends BaseActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // the fragment is restored automatically on recreation - only add it on first create
         if (savedInstanceState == null) {
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-            ft.replace(android.R.id.content, new SettingsFragment()).commit();
+            ft.replace(android.R.id.content, new PermissionsFragment()).commit();
         }
     }
 }

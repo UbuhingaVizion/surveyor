@@ -15,6 +15,7 @@ import com.vdurmont.semver4j.Semver;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -75,9 +76,28 @@ public class Engine {
      * @return the environment
      */
     public static Environment createEnvironment(Org org) {
+        return createEnvironment(org, null);
+    }
+
+    /**
+     * Creates an engine environment from the given org, optionally overriding the language flows
+     * run in. goflow uses the first allowed language as the default, so the preferred language is
+     * moved to the front of the list.
+     *
+     * @param org               the org
+     * @param preferredLanguage ISO 639-3 code (e.g. "fra") or null to use the org's primary language
+     * @return the environment
+     */
+    public static Environment createEnvironment(Org org, String preferredLanguage) {
         String dateFormat = org.getDateStyle().equals("day_first") ? "DD-MM-YYYY" : "MM-DD-YYYY";
         String timeformat = "tt:mm";
-        StringSlice languages = listToSlice(Arrays.asList(org.getLanguages()));
+
+        List<String> langs = new ArrayList<>(Arrays.asList(org.getLanguages()));
+        if (preferredLanguage != null && !preferredLanguage.isEmpty() && langs.remove(preferredLanguage)) {
+            langs.add(0, preferredLanguage);
+        }
+        StringSlice languages = listToSlice(langs);
+
         String redactionPolicy = org.isAnon() ? "urns" : "none";
         return new Environment(dateFormat, timeformat, org.getTimezone(), languages, org.getCountry(), redactionPolicy);
     }

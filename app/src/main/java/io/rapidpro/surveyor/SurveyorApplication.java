@@ -145,7 +145,7 @@ public class SurveyorApplication extends Application {
      * @return the base URL
      */
     public String getTembaHost() {
-        String host = getPreferences().getString(SurveyorPreferences.HOST, getString(R.string.pref_default_host));
+        String host = getPreferences().getString(SurveyorPreferences.HOST, getDefaultHost());
 
         // strip any trailing slash
         if (host.endsWith("/")) {
@@ -153,6 +153,17 @@ public class SurveyorApplication extends Application {
         }
 
         return host;
+    }
+
+    /**
+     * The default RapidPro host. In debug builds this can be overridden at build time with
+     * -PdebugHost=... (useful for pointing test builds at an ngrok tunnel).
+     */
+    private String getDefaultHost() {
+        if (BuildConfig.DEBUG && BuildConfig.DEBUG_HOST != null && !BuildConfig.DEBUG_HOST.isEmpty()) {
+            return BuildConfig.DEBUG_HOST;
+        }
+        return getString(R.string.pref_default_host);
     }
 
     /**

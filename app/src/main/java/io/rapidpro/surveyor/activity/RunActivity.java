@@ -44,6 +44,7 @@ import java.io.IOException;
 import io.rapidpro.surveyor.Logger;
 import io.rapidpro.surveyor.R;
 import io.rapidpro.surveyor.SurveyorIntent;
+import io.rapidpro.surveyor.SurveyorPreferences;
 import io.rapidpro.surveyor.data.Flow;
 import io.rapidpro.surveyor.data.Org;
 import io.rapidpro.surveyor.data.Submission;
@@ -96,11 +97,20 @@ public class RunActivity extends BaseActivity {
 
         try {
             Org org = getSurveyor().getOrgService().get(orgUUID);
-            Environment environment = Engine.createEnvironment(org);
+            String language = getIntent().getStringExtra(SurveyorIntent.EXTRA_LANGUAGE);
+            if (language == null) {
+                language = getSurveyor().getPreferences().getString(SurveyorPreferences.LANGUAGE, "");
+            }
+            Environment environment = Engine.createEnvironment(org, language);
             SessionAssets assets = Engine.createSessionAssets(environment, Engine.loadAssets(org.getAssets()));
 
             Flow flow = org.getFlow(flowUUID);
             setTitle(flow.getName());
+
+            applyOrgTheme(org);
+            if (getSupportActionBar() != null) {
+                getSupportActionBar().setSubtitle(org.getName());
+            }
 
             Trigger trigger = Engine.createManualTrigger(environment, Contact.createEmpty(assets), flow.toReference());
 
@@ -211,6 +221,9 @@ public class RunActivity extends BaseActivity {
             @Override
             public void onPermissionsResult(boolean allGranted) {
                 if (!allGranted) {
+                    if (isPermanentlyDenied(new String[]{Manifest.permission.CAMERA})) {
+                        showPermissionSettingsDialog(R.string.permission_camera_denied);
+                    }
                     return;
                 }
 
@@ -244,6 +257,9 @@ public class RunActivity extends BaseActivity {
             @Override
             public void onPermissionsResult(boolean allGranted) {
                 if (!allGranted) {
+                    if (isPermanentlyDenied(new String[]{Manifest.permission.CAMERA})) {
+                        showPermissionSettingsDialog(R.string.permission_camera_denied);
+                    }
                     return;
                 }
 
@@ -280,6 +296,9 @@ public class RunActivity extends BaseActivity {
             @Override
             public void onPermissionsResult(boolean allGranted) {
                 if (!allGranted) {
+                    if (isPermanentlyDenied(new String[]{Manifest.permission.RECORD_AUDIO})) {
+                        showPermissionSettingsDialog(R.string.permission_record_denied);
+                    }
                     return;
                 }
 

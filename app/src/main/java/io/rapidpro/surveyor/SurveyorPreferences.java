@@ -29,4 +29,27 @@ public interface SurveyorPreferences {
     String SEND_OVER_WIFI = "wifi";
 
     String SEND_OVER_ANY = "any";
+
+    /**
+     * Preferred flow language code (ISO 639-3, e.g. "eng", "fra", "run"). Empty means use the
+     * org's primary (first) language.
+     */
+    String LANGUAGE = "language";
+
+    /**
+     * Prefix for per-flow language overrides. The full key is the prefix plus the flow UUID.
+     */
+    String LANGUAGE_PREFIX = "language_";
+
+    /**
+     * Whether we have already asked for the notification permission on this device
+     */
+    String NOTIFICATIONS_ASKED = "notifications_asked";
+
+    /**
+     * Gets the preference key for a per-flow language override
+     */
+    static String languageKey(String flowUuid) {
+        return LANGUAGE_PREFIX + flowUuid;
+    }
 }

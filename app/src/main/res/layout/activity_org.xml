@@ -24,7 +24,7 @@
             android:minWidth="80dp"
             android:minHeight="0dp"
             android:onClick="onActionSubmit"
-            android:text="3,122"
+            android:text="@string/action_send_now"
             android:textColor="@color/pending_button_text"
             android:textSize="18dp"
             android:textStyle="bold" />

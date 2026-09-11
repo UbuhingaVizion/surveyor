@@ -1,6 +1,8 @@
 package io.rapidpro.surveyor.activity;
 
+import android.Manifest;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -86,6 +88,34 @@ public class OrgChooseActivity extends BaseActivity implements OrgListFragment.C
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        requestNotificationsIfNeeded();
+    }
+
+    /**
+     * On Android 13+ asks for the notification permission once, so background sync results can be
+     * shown to the user
+     */
+    private void requestNotificationsIfNeeded() {
+        if (isFinishing() || !isLoggedIn() || Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            return;
+        }
+        if (getPreferences().getBoolean(SurveyorPreferences.NOTIFICATIONS_ASKED, false)) {
+            return;
+        }
+
+        getPreferences().edit().putBoolean(SurveyorPreferences.NOTIFICATIONS_ASKED, true).apply();
+
+        requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, new PermissionCallback() {
+            @Override
+            public void onPermissionsResult(boolean allGranted) {
+                // notifications are optional
+            }
+        });
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         return super.onOptionsItemSelected(item);
     }
@@ -95,7 +125,8 @@ public class OrgChooseActivity extends BaseActivity implements OrgListFragment.C
      */
     @Override
     public List<Org> getListItems() {
-        return getOrgs();
+        List<Org> orgs = getOrgs();
+        return orgs != null ? orgs : Collections.emptyList();
     }
 
     /**

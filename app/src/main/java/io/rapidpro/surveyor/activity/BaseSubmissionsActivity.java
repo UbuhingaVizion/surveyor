@@ -1,6 +1,7 @@
 package io.rapidpro.surveyor.activity;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.Network;
@@ -12,16 +13,14 @@ import android.widget.Toast;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
-import java.text.NumberFormat;
-import java.util.List;
 import java.util.concurrent.Callable;
 
 import io.rapidpro.surveyor.Logger;
 import io.rapidpro.surveyor.R;
 import io.rapidpro.surveyor.data.Org;
-import io.rapidpro.surveyor.data.Submission;
 import io.rapidpro.surveyor.ui.ViewCache;
 import io.rapidpro.surveyor.utils.AppExecutors;
+import io.rapidpro.surveyor.utils.HostCheck;
 import io.rapidpro.surveyor.work.SyncScheduler;
 
 /**
@@ -30,6 +29,8 @@ import io.rapidpro.surveyor.work.SyncScheduler;
 public abstract class BaseSubmissionsActivity extends BaseActivity {
 
     private boolean observingSync = false;
+
+    private boolean awaitingSendResult = false;
 
     @Override
     protected void onStart() {
@@ -46,22 +47,38 @@ public abstract class BaseSubmissionsActivity extends BaseActivity {
         }
         observingSync = true;
 
-        WorkManager.getInstance(this)
-                .getWorkInfosForUniqueWorkLiveData(SyncScheduler.WORK_NAME)
-                .observe(this, infos -> {
-                    if (infos == null || infos.isEmpty()) {
-                        return;
-                    }
+        try {
+            WorkManager.getInstance(this)
+                    .getWorkInfosForUniqueWorkLiveData(SyncScheduler.WORK_NAME)
+                    .observe(this, infos -> {
+                        if (infos == null || infos.isEmpty()) {
+                            return;
+                        }
 
-                    WorkInfo.State state = infos.get(0).getState();
-                    setSyncing(state == WorkInfo.State.RUNNING);
+                        WorkInfo.State state = infos.get(0).getState();
+                        setSyncing(state == WorkInfo.State.RUNNING);
 
-                    if (state == WorkInfo.State.SUCCEEDED
-                            || state == WorkInfo.State.FAILED
-                            || state == WorkInfo.State.CANCELLED) {
-                        refresh();
-                    }
-                });
+                        if (state == WorkInfo.State.SUCCEEDED
+                                || state == WorkInfo.State.FAILED
+                                || state == WorkInfo.State.CANCELLED) {
+                            refresh();
+                        }
+
+                        // if the user explicitly tapped send, tell them how it went
+                        if (awaitingSendResult) {
+                            if (state == WorkInfo.State.SUCCEEDED) {
+                                awaitingSendResult = false;
+                                Toast.makeText(BaseSubmissionsActivity.this,
+                                        R.string.submissions_sent_toast, Toast.LENGTH_SHORT).show();
+                            } else if (state == WorkInfo.State.FAILED) {
+                                awaitingSendResult = false;
+                                showSendFailureAsync();
+                            }
+                        }
+                    });
+        } catch (Exception e) {
+            Logger.e("Unable to observe background sync", e);
+        }
     }
 
     private void setSyncing(boolean syncing) {
@@ -87,7 +104,7 @@ public abstract class BaseSubmissionsActivity extends BaseActivity {
             AppExecutors.runOnMain(() -> {
                 ViewCache cache = getViewCache();
                 cache.setVisible(R.id.container_pending, pending > 0);
-                cache.setButtonText(R.id.button_pending, NumberFormat.getInstance().format(pending));
+                cache.setButtonText(R.id.button_pending, getString(R.string.action_send_now_count, pending));
             });
         });
     }
@@ -125,11 +142,57 @@ public abstract class BaseSubmissionsActivity extends BaseActivity {
             }
         });
 
-        SyncScheduler.sendNow(this);
+        final String host = getSurveyor().getTembaHost();
 
-        Toast.makeText(this, R.string.sending_submissions, Toast.LENGTH_SHORT).show();
+        // quick reachability check so a bad host fails immediately instead of silently retrying
+        AppExecutors.io().execute(() -> {
+            final boolean reachable = HostCheck.reachable(host);
+            AppExecutors.runOnMain(() -> {
+                if (isFinishing() || isDestroyed()) {
+                    return;
+                }
+                if (!reachable) {
+                    new AlertDialog.Builder(BaseSubmissionsActivity.this)
+                            .setTitle(R.string.sync_failed)
+                            .setMessage(getString(R.string.host_unreachable, host))
+                            .setPositiveButton(android.R.string.ok, null)
+                            .show();
+                    return;
+                }
 
-        refresh();
+                awaitingSendResult = true;
+                SyncScheduler.sendNow(BaseSubmissionsActivity.this);
+                Toast.makeText(BaseSubmissionsActivity.this, R.string.sending_submissions, Toast.LENGTH_SHORT).show();
+                refresh();
+            });
+        });
+    }
+
+    /**
+     * Looks up the last upload error off the main thread and shows it in a dialog
+     */
+    private void showSendFailureAsync() {
+        AppExecutors.io().execute(() -> {
+            final String error;
+            try {
+                Org org = getOrg();
+                error = org == null ? null : getSurveyor().getSubmissionService().getLastError(org);
+            } catch (Exception e) {
+                Logger.e("Unable to read last upload error", e);
+                return;
+            }
+
+            AppExecutors.runOnMain(() -> {
+                if (isFinishing() || isDestroyed()) {
+                    return;
+                }
+                new AlertDialog.Builder(BaseSubmissionsActivity.this)
+                        .setTitle(R.string.sync_failed)
+                        .setMessage(error != null ? error : getString(R.string.error_submissions_send))
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show();
+            });
+        });
     }
 
     /**
@@ -147,8 +210,6 @@ public abstract class BaseSubmissionsActivity extends BaseActivity {
         NetworkCapabilities caps = cm.getNetworkCapabilities(network);
         return caps != null && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED);
     }
-
-    protected abstract List<Submission> getPendingSubmissions();
 
     protected abstract Org getOrg();
 

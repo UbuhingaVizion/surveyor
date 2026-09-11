@@ -47,6 +47,7 @@ public class SubmissionSyncWorker extends Worker {
 
         int sent = 0;
         boolean retry = false;
+        boolean failed = false;
 
         try {
             List<Org> orgs = app.getOrgService().getAll();
@@ -75,6 +76,7 @@ public class SubmissionSyncWorker extends Worker {
 
                         if (state.getAttempts() >= MAX_ATTEMPTS) {
                             SyncNotifier.notifyFailed(app, e.getMessage());
+                            failed = true;
                         } else {
                             retry = true;
                         }
@@ -90,7 +92,11 @@ public class SubmissionSyncWorker extends Worker {
             SyncNotifier.notifyResult(app, sent);
         }
 
-        return retry ? Result.retry() : Result.success();
+        if (retry) {
+            return Result.retry();
+        }
+        // surface a hard failure so the UI can tell the user the send didn't work
+        return failed ? Result.failure() : Result.success();
     }
 
     private void setForegroundSafely(Context ctx) {

@@ -12,6 +12,7 @@ import android.widget.ListView;
 
 import androidx.fragment.app.Fragment;
 
+import java.util.Collections;
 import java.util.List;
 
 import io.rapidpro.surveyor.R;
@@ -33,7 +34,10 @@ public class OrgListFragment extends Fragment implements AbsListView.OnItemClick
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        List<Org> items = container.getListItems();
+        List<Org> items = container != null ? container.getListItems() : null;
+        if (items == null) {
+            items = Collections.emptyList();
+        }
 
         adapter = new OrgListAdapter(requireContext(), R.layout.item_org, items);
     }

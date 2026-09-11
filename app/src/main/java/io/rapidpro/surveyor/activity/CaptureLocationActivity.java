@@ -1,6 +1,7 @@
 package io.rapidpro.surveyor.activity;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
@@ -46,18 +47,8 @@ public class CaptureLocationActivity extends BaseActivity {
 
         setContentView(R.layout.activity_capture_location);
 
-        requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
-                R.string.permission_location, new PermissionCallback() {
-                    @Override
-                    public void onPermissionsResult(boolean allGranted) {
-                        if (allGranted) {
-                            onPermissionsGranted();
-                        } else {
-                            finish();
-                        }
-                    }
-                });
-
+        // must be initialised before requesting permissions: when permission is already granted
+        // the callback fires synchronously and startLocationUpdates() needs this listener
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
@@ -66,6 +57,23 @@ public class CaptureLocationActivity extends BaseActivity {
                 }
             }
         };
+
+        final String[] locationPermissions = {
+                Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
+
+        requestPermissions(locationPermissions, R.string.permission_location, new PermissionCallback() {
+            @Override
+            public void onPermissionsResult(boolean allGranted) {
+                if (allGranted) {
+                    onPermissionsGranted();
+                } else if (isPermanentlyDenied(locationPermissions)) {
+                    AlertDialog dialog = showPermissionSettingsDialog(R.string.permission_location_denied);
+                    dialog.setOnDismissListener(d -> finish());
+                } else {
+                    finish();
+                }
+            }
+        });
     }
 
     @Override
@@ -160,6 +168,12 @@ public class CaptureLocationActivity extends BaseActivity {
     private void startLocationUpdates() {
         Logger.d("Starting location updates...");
 
+        if (locationCallback == null) {
+            Logger.d("Location callback not initialised");
+            finish();
+            return;
+        }
+
         IconTextView button = (IconTextView) getViewCache().getView(R.id.button_capture);
         button.setText(R.string.icon_gps_not_fixed);
 
@@ -217,7 +231,9 @@ public class CaptureLocationActivity extends BaseActivity {
      */
     protected void stopLocationUpdates() {
         if (locationApiClient != null) {
-            locationApiClient.removeLocationUpdates(locationCallback);
+            if (locationCallback != null) {
+                locationApiClient.removeLocationUpdates(locationCallback);
+            }
             locationApiClient = null;
         }
         if (locationManager != null && locationListener != null) {

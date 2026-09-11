@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,6 +27,7 @@ import io.rapidpro.surveyor.net.TembaService;
 import io.rapidpro.surveyor.net.responses.Boundary;
 import io.rapidpro.surveyor.net.responses.Field;
 import io.rapidpro.surveyor.net.responses.Group;
+import io.rapidpro.surveyor.utils.FlowPermissions;
 import io.rapidpro.surveyor.utils.JsonUtils;
 import io.rapidpro.surveyor.utils.RawJson;
 
@@ -59,6 +61,12 @@ public class Org {
 
     private String[] languages;
 
+    /**
+     * Optional custom color (hex, e.g. "#D84315") chosen by a supervisor. Null means use the
+     * deterministic color derived from the UUID.
+     */
+    private String color;
+
     private String timezone;
 
     private String country;
@@ -79,6 +87,8 @@ public class Org {
     private transient File directory;
 
     private transient List<Flow> flows;
+
+    private transient Map<String, Set<String>> requiredPermissions;
 
     private transient boolean lastRefreshChanged;
 
@@ -198,6 +208,14 @@ public class Org {
         return languages;
     }
 
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+
     public String getTimezone() {
         return timezone;
     }
@@ -261,6 +279,34 @@ public class Org {
             }
         }
         return null;
+    }
+
+    /**
+     * Gets the runtime permissions required to run the given flow (including any sub-flows it
+     * calls). Computed once from the downloaded assets and cached.
+     *
+     * @param flowUuid the flow UUID
+     * @return the set of Android permission names
+     */
+    public Set<String> getRequiredPermissions(String flowUuid) {
+        if (requiredPermissions == null) {
+            requiredPermissions = new HashMap<>();
+        }
+        if (requiredPermissions.containsKey(flowUuid)) {
+            return requiredPermissions.get(flowUuid);
+        }
+
+        Set<String> permissions;
+        try {
+            OrgAssets assets = OrgAssets.fromJson(getAssets());
+            permissions = FlowPermissions.required(assets.getFlowDefinitions(), flowUuid);
+        } catch (Exception e) {
+            Logger.e("Unable to inspect flow permissions", e);
+            permissions = Collections.emptySet();
+        }
+
+        requiredPermissions.put(flowUuid, permissions);
+        return permissions;
     }
 
     /**

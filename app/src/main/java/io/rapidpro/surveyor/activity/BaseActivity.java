@@ -5,8 +5,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -34,7 +36,9 @@ import io.rapidpro.surveyor.R;
 import io.rapidpro.surveyor.SurveyorApplication;
 import io.rapidpro.surveyor.SurveyorIntent;
 import io.rapidpro.surveyor.SurveyorPreferences;
+import io.rapidpro.surveyor.data.Org;
 import io.rapidpro.surveyor.ui.ViewCache;
+import io.rapidpro.surveyor.utils.OrgColors;
 
 /**
  * All activities for the SurveyorApplication app extend this base activity which provides convenience methods
@@ -95,6 +99,21 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     /**
+     * Applies the given org's color to the action bar so the active organization is always
+     * visually identifiable. Safe to call with a null org.
+     */
+    public void applyOrgTheme(Org org) {
+        if (org == null) {
+            return;
+        }
+
+        androidx.appcompat.app.ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setBackgroundDrawable(new ColorDrawable(OrgColors.getPrimaryColor(org)));
+        }
+    }
+
+    /**
      * Keeps content clear of the system bars. On Android 15/16 edge-to-edge is enforced and the
      * manifest opt-out is ignored, so we apply the system-bar insets as padding ourselves.
      */
@@ -118,12 +137,10 @@ public abstract class BaseActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
 
-        // show the settings menu in debug mode
-        if (BuildConfig.DEBUG) {
-            MenuItem menuItem = menu.findItem(R.id.action_settings);
-            if (menuItem != null) {
-                menuItem.setVisible(true);
-            }
+        // settings is available in all builds (includes the permissions & diagnostics screen)
+        MenuItem settingsItem = menu.findItem(R.id.action_settings);
+        if (settingsItem != null) {
+            settingsItem.setVisible(true);
         }
 
         // show logout action if we're logged in
@@ -344,6 +361,13 @@ public abstract class BaseActivity extends AppCompatActivity {
      * Requests the given permissions, showing a rationale dialog first if appropriate
      */
     protected void requestPermissions(String[] permissions, int rationaleResId, PermissionCallback callback) {
+        requestPermissions(permissions, getString(rationaleResId), callback);
+    }
+
+    /**
+     * Requests the given permissions, showing the given rationale message first if appropriate
+     */
+    protected void requestPermissions(String[] permissions, CharSequence rationale, PermissionCallback callback) {
         if (hasAllPermissions(permissions)) {
             callback.onPermissionsResult(true);
             return;
@@ -352,12 +376,21 @@ public abstract class BaseActivity extends AppCompatActivity {
         pendingPermissionCallback = callback;
 
         if (shouldShowRationale(permissions)) {
-            showConfirmDialog(rationaleResId, new ConfirmationListener() {
-                @Override
-                public void onConfirm() {
-                    permissionLauncher.launch(permissions);
-                }
-            });
+            new AlertDialog.Builder(this)
+                    .setMessage(rationale)
+                    .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int id) {
+                            permissionLauncher.launch(permissions);
+                        }
+                    })
+                    .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int id) {
+                            dialog.cancel();
+                        }
+                    })
+                    .show();
         } else {
             permissionLauncher.launch(permissions);
         }
@@ -383,6 +416,47 @@ public abstract class BaseActivity extends AppCompatActivity {
             }
         }
         return true;
+    }
+
+    /**
+     * Whether any of the given permissions have been permanently denied (i.e. the user chose "don't
+     * ask again"). Only meaningful after a permission request has been made.
+     */
+    protected boolean isPermanentlyDenied(String[] permissions) {
+        for (String permission : permissions) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED
+                    && !ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Opens this app's system settings page so the user can grant permissions manually
+     */
+    public void openAppSettings() {
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                Uri.fromParts("package", getPackageName(), null));
+        startActivity(intent);
+    }
+
+    /**
+     * Shows a dialog explaining a permission was permanently denied, with buttons to open app
+     * settings or continue. The returned dialog can have a dismiss listener attached by callers
+     * that need to react when it closes.
+     */
+    protected AlertDialog showPermissionSettingsDialog(int msgResId) {
+        return new AlertDialog.Builder(this)
+                .setMessage(msgResId)
+                .setPositiveButton(R.string.action_open_settings, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        openAppSettings();
+                    }
+                })
+                .setNegativeButton(R.string.action_continue_anyway, null)
+                .show();
     }
 
     private boolean shouldShowRationale(String[] permissions) {

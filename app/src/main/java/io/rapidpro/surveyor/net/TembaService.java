@@ -237,8 +237,20 @@ public class TembaService {
             return result.body().get("location").getAsString();
 
         } catch (IOException e) {
-            throw new TembaException("Error uploading media", e);
+            throw new TembaException(errorMessage("Error uploading media", e), e);
         }
+    }
+
+    /**
+     * Builds an error message that includes the root cause (e.g. "Unable to resolve host ...")
+     */
+    private static String errorMessage(String context, IOException e) {
+        Throwable cause = e;
+        while (cause.getCause() != null && cause.getCause() != cause) {
+            cause = cause.getCause();
+        }
+        String detail = cause.getMessage();
+        return detail == null || detail.isEmpty() ? context : context + ": " + detail;
     }
 
     /**
@@ -253,7 +265,7 @@ public class TembaService {
             checkResponse(result);
 
         } catch (IOException e) {
-            throw new TembaException("Error submitting", e);
+            throw new TembaException(errorMessage("Error submitting", e), e);
         }
     }
 

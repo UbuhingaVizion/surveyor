@@ -20,6 +20,16 @@
     <string name="action_discard">Abandonner</string>
     <string name="action_cancel">Annuler</string>
     <string name="action_start_flow">Lancer le flux</string>
+    <string name="action_flow_language">Langue du flux</string>
+    <string name="flow_language_format">Langue : %1$s</string>
+    <string name="action_send_now">Envoyer maintenant</string>
+    <string name="action_send_now_count">Envoyer maintenant (%1$d)</string>
+    <string name="action_org_color">Couleur de l’organisation</string>
+    <string name="action_switch_org">Changer d’organisation</string>
+    <string name="action_search_flows">Rechercher des flux</string>
+    <string name="action_reset_color">Réinitialiser la couleur</string>
+    <string name="dialog_title_org_color">Couleur de l’organisation</string>
+    <string name="error_no_other_orgs">Vous n’avez accès à aucune autre organisation.</string>
 
     <!-- confirmation prompts -->
     <string name="confirm_org_download">Les flux de cette organisation n’ont pas encore été téléchargés. Télécharger tous les flux maintenant ?</string>
@@ -38,6 +48,7 @@
     <string name="error_no_orgs">Désolé, votre compte n’a pas accès à l’envoi d’enquêtes. Contactez votre administrateur système.</string>
     <string name="error_org_refresh">Un problème est survenu lors de l’actualisation de cette organisation. Veuillez réessayer plus tard.</string>
     <string name="error_submissions_send">Un problème est survenu lors de l’envoi des réponses au serveur. Veuillez réessayer plus tard.</string>
+    <string name="submissions_sent_toast">Réponses envoyées</string>
     <string name="error_google_api">Un problème est survenu lors de la connexion à l’API Google. Veuillez réessayer plus tard.</string>
 
     <!-- chat log messages -->
@@ -54,6 +65,21 @@
     <string name="permission_record">Nous avons besoin de l’autorisation d’enregistrer l’audio afin de collecter des enregistrements audio.</string>
     <string name="permission_location">Nous avons besoin d’accéder à votre position afin de collecter des données GPS.</string>
 
+    <!-- permissions pre-flight & diagnostics -->
+    <string name="permission_label_camera">Caméra</string>
+    <string name="permission_label_microphone">Microphone</string>
+    <string name="permission_label_location">Position</string>
+    <string name="permission_label_notifications">Notifications</string>
+    <string name="permission_preflight">Cette enquête a besoin d’accéder à : %1$s pour fonctionner sans interruption. Autoriser avant de commencer ?</string>
+    <string name="permission_preflight_denied">Certaines autorisations ont été définitivement refusées. Ouvrez les paramètres de l’application pour les accorder, ou continuez : vous serez peut-être invité à nouveau au moment voulu.</string>
+    <string name="permission_camera_denied">L’autorisation de la caméra a été définitivement refusée. Ouvrez les paramètres de l’application pour l’accorder, sinon la question ne peut pas être complétée.</string>
+    <string name="permission_record_denied">L’autorisation du microphone a été définitivement refusée. Ouvrez les paramètres de l’application pour l’accorder, sinon la question ne peut pas être complétée.</string>
+    <string name="permission_location_denied">L’autorisation de localisation a été définitivement refusée. Ouvrez les paramètres de l’application pour l’accorder, sinon la question ne peut pas être complétée.</string>
+    <string name="permission_granted">Accordée</string>
+    <string name="permission_denied">Refusée — touchez pour autoriser</string>
+    <string name="action_open_settings">Ouvrir les paramètres</string>
+    <string name="action_continue_anyway">Continuer quand même</string>
+
     <!-- media capturing -->
     <string name="send_message">Envoyer le message</string>
     <string name="tap_to_record">Touchez pour enregistrer</string>
@@ -63,9 +89,10 @@
     <string name="accuracy_meters">Précision : %d mètres</string>
 
     <!-- preferences -->
-    <string name="pref_default_host">https://ubuviz.com</string>
+    <string name="pref_default_host">https://app.ubuviz.com</string>
     <string name="pref_title_host">Hôte UbuViz</string>
     <string name="pref_summary_host">L’adresse de votre installation UbuViz</string>
+    <string name="host_unreachable">Impossible d’atteindre %1$s. Vérifiez l’adresse et votre connexion.</string>
 
     <string name="pref_title_send_over">Envoyer les réponses via</string>
     <string name="pref_summary_send_over">Wi-Fi uniquement est recommandé pour économiser les données</string>
@@ -77,6 +104,12 @@
         <item>wifi</item>
         <item>any</item>
     </string-array>
+    <string name="pref_title_language">Langue du flux</string>
+    <string name="pref_summary_language">Langue utilisée lors de l’exécution des flux</string>
+    <string name="language_default">Par défaut (langue de l’organisation)</string>
+    <string name="pref_header_diagnostics">Diagnostic</string>
+    <string name="pref_header_permissions">Autorisations</string>
+    <string name="pref_summary_permissions">Vérifier l’accès à la caméra, au microphone, à la position et aux notifications</string>
 
     <!-- background sync -->
     <string name="send_now">Envoyer maintenant</string>
