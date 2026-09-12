@@ -1,7 +1,6 @@
 <resources>
     <!-- activity titles -->
     <string name="title_activity_login">Connexion</string>
-    <string name="title_activity_create_account">Créer un compte</string>
     <string name="title_activity_org_choose">Choisir l’organisation</string>
     <string name="title_activity_org">Organisation</string>
     <string name="title_activity_flow">Détails du flux</string>

@@ -10,6 +10,7 @@ import androidx.work.ForegroundInfo;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import java.io.File;
 import java.util.List;
 
 import io.rapidpro.surveyor.Logger;
@@ -29,6 +30,16 @@ public class SubmissionSyncWorker extends Worker {
      * than retrying forever.
      */
     public static final int MAX_ATTEMPTS = 8;
+
+    /**
+     * Incomplete (abandoned) drafts older than this are deleted during sync.
+     */
+    public static final long ABANDONED_DRAFT_MAX_AGE_MS = 7L * 24 * 60 * 60 * 1000;
+
+    /**
+     * Stale camera/video/audio capture files in the cache older than this are deleted.
+     */
+    public static final long TEMP_MEDIA_MAX_AGE_MS = 24L * 60 * 60 * 1000;
 
     public SubmissionSyncWorker(@NonNull Context context, @NonNull WorkerParameters params) {
         super(context, params);
@@ -52,7 +63,12 @@ public class SubmissionSyncWorker extends Worker {
         try {
             List<Org> orgs = app.getOrgService().getAll();
 
+            pruneTempMedia(app);
+
             for (Org org : orgs) {
+                // remove abandoned drafts so they don't leak storage on the device
+                app.getSubmissionService().pruneAbandonedIncomplete(org, ABANDONED_DRAFT_MAX_AGE_MS);
+
                 for (Submission submission : app.getSubmissionService().getCompleted(org)) {
                     UploadState state = submission.getUploadState();
 
@@ -109,5 +125,29 @@ public class SubmissionSyncWorker extends Worker {
             info = new ForegroundInfo(SyncNotifier.PROGRESS_ID, notification);
         }
         setForegroundAsync(info);
+    }
+
+    /**
+     * Deletes stale camera/video/audio capture files left in the cache directory
+     */
+    private void pruneTempMedia(SurveyorApplication app) {
+        File cache = app.getExternalCacheDir();
+        if (cache == null) {
+            return;
+        }
+
+        long cutoff = System.currentTimeMillis() - TEMP_MEDIA_MAX_AGE_MS;
+        File[] files = cache.listFiles();
+        if (files == null) {
+            return;
+        }
+
+        for (File file : files) {
+            if (file.isFile() && file.lastModified() < cutoff) {
+                if (!file.delete()) {
+                    Logger.w("Unable to delete stale temp media " + file.getName());
+                }
+            }
+        }
     }
 }

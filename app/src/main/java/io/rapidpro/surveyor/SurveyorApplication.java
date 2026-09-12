@@ -18,6 +18,7 @@ import java.util.Set;
 import io.rapidpro.surveyor.data.OrgService;
 import io.rapidpro.surveyor.data.SubmissionService;
 import io.rapidpro.surveyor.net.TembaService;
+import io.rapidpro.surveyor.utils.StorageMigration;
 import io.rapidpro.surveyor.utils.SurveyUtils;
 import io.rapidpro.surveyor.work.SyncNotifier;
 import io.rapidpro.surveyor.work.SyncScheduler;
@@ -65,6 +66,10 @@ public class SurveyorApplication extends Application {
         Logger.d("External storage dir=" + Environment.getExternalStorageDirectory() + " state=" + Environment.getExternalStorageState() + " emulated=" + Environment.isExternalStorageEmulated());
 
         s_this = this;
+
+        // move any pending submissions out of the (USB-browsable) external storage before the
+        // services that read them are created
+        migrateLegacyStorage();
 
         tembaService = new TembaService(getTembaHost(), getCacheDir());
 
@@ -228,7 +233,32 @@ public class SurveyorApplication extends Application {
      * @return the directory
      */
     public File getUserDirectory() {
-        return getExternalFilesDir(null);
+        return getFilesDir();
+    }
+
+    /**
+     * Moves any submissions written by older versions of the app from external app storage into the
+     * private internal sandbox. Runs once at startup; safe to call repeatedly.
+     */
+    private void migrateLegacyStorage() {
+        try {
+            File external = getExternalFilesDir(null);
+            if (external == null) {
+                return;
+            }
+
+            File legacy = new File(external, "submissions");
+            if (!legacy.isDirectory()) {
+                return;
+            }
+
+            int moved = StorageMigration.migrate(legacy, new File(getFilesDir(), "submissions"));
+            if (moved > 0) {
+                Logger.d("Migrated " + moved + " files from external to internal storage");
+            }
+        } catch (Exception e) {
+            Logger.e("Unable to migrate legacy submissions", e);
+        }
     }
 
     /**

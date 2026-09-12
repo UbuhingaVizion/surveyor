@@ -4,7 +4,6 @@
     <string name="prompt_password">Ijambobanga</string>
     <string name="action_sign_in">Injira</string>
     <string name="action_sign_in_short">Injira</string>
-    <string name="create_account">Fungura konti</string>
 
     <string name="error_invalid_email">Iyi aderesi imeyili ntabwo ikwiye</string>
     <string name="error_invalid_password">Iri jambobanga rigufi cane</string>

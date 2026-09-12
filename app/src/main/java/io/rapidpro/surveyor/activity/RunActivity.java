@@ -17,6 +17,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -41,6 +42,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.io.File;
 import java.io.IOException;
 
+import io.rapidpro.surveyor.BuildConfig;
 import io.rapidpro.surveyor.Logger;
 import io.rapidpro.surveyor.R;
 import io.rapidpro.surveyor.SurveyorIntent;
@@ -88,6 +90,12 @@ public class RunActivity extends BaseActivity {
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // shield survey screens (and the recent-apps thumbnail) from screenshots and screen
+        // recording in release builds; left off in debug so tooling screenshots still work
+        if (!BuildConfig.DEBUG) {
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
+        }
 
         String orgUUID = getIntent().getStringExtra(SurveyorIntent.EXTRA_ORG_UUID);
         String flowUUID = getIntent().getStringExtra(SurveyorIntent.EXTRA_FLOW_UUID);

@@ -4,11 +4,10 @@
     <!--
       Debug-only overlay.
 
-      Instrumented tests run against local cleartext mock HTTP servers (MockWebServer),
-      and WebView (unlike OkHttp) enforces the platform cleartext policy on API 28+.
-      Allow cleartext here so tests can load http://localhost. Release builds do NOT
-      include this overlay and remain HTTPS-only.
+      Instrumented tests run against local cleartext mock HTTP servers (MockWebServer) and the
+      WebView loads http://localhost. Cleartext for localhost/emulator hosts is permitted by
+      network_security_config.xml, which applies to all build types, so no debug-only override
+      of usesCleartextTraffic is needed here. Release builds remain HTTPS-only for everything else.
     -->
-    <application android:usesCleartextTraffic="true" />
 
 </manifest>

@@ -55,4 +55,11 @@ public final class TokenStore {
     public static void remove(Context context, String uuid) {
         prefs(context).edit().remove(uuid).apply();
     }
+
+    /**
+     * Removes all stored tokens (e.g. on logout, so they don't persist on a shared device)
+     */
+    public static void clear(Context context) {
+        prefs(context).edit().clear().apply();
+    }
 }

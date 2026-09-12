@@ -5,7 +5,6 @@
 
     <!-- activity titles -->
     <string name="title_activity_login">Sign in</string>
-    <string name="title_activity_create_account">Create Account</string>
     <string name="title_activity_org_choose">Choose Organization</string>
     <string name="title_activity_org">Organization</string>
     <string name="title_activity_flow">Flow Details</string>

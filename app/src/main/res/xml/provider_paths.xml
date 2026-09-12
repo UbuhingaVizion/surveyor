@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <external-files-path name="shared" path="."/>
-    <external-cache-path name="cache" path="."/>
+    <!-- submissions and other shared user data live in the private internal sandbox -->
+    <files-path name="shared" path="."/>
 
-    <!-- for legacy submissions on the sdcard -->
-    <external-path name="external_files" path="."/>
+    <!-- transient camera/video/audio capture files (app-scoped external cache) -->
+    <external-cache-path name="cache" path="."/>
 </paths>

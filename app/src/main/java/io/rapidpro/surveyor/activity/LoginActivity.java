@@ -231,13 +231,4 @@ public class LoginActivity extends BaseActivity {
             }
         });
     }
-
-    /**
-     * The user clicked on the link to create a new account,
-     * launch our CreateAccountActivity
-     **/
-    public void onCreateAccount(View view) {
-        startActivity(new Intent(this, CreateAccountActivity.class));
-        finish();
-    }
 }

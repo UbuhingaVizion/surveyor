@@ -156,6 +156,38 @@ public class SubmissionService {
     }
 
     /**
+     * Deletes incomplete submissions older than maxAgeMs (abandoned drafts), freeing their media.
+     * Completed submissions awaiting upload are never touched.
+     *
+     * @param org      the org
+     * @param maxAgeMs the maximum age of an incomplete submission in milliseconds
+     * @return the number of submissions pruned
+     */
+    public int pruneAbandonedIncomplete(Org org, long maxAgeMs) {
+        int pruned = 0;
+        long cutoff = System.currentTimeMillis() - maxAgeMs;
+
+        for (Flow flow : org.getFlows()) {
+            File flowDir = new File(new File(rootDir, org.getUuid()), flow.getUuid());
+            File[] subDirs = flowDir.listFiles(DIR_FILTER);
+            if (subDirs == null) {
+                continue;
+            }
+
+            for (File subDir : subDirs) {
+                Submission sub = new Submission(org, subDir);
+                if (!sub.isCompleted() && subDir.lastModified() < cutoff) {
+                    Logger.d("Pruning abandoned submission " + sub.getUuid());
+                    sub.delete();
+                    pruned++;
+                }
+            }
+        }
+
+        return pruned;
+    }
+
+    /**
      * Return the count of completed submissions across all flows for the given org
      *
      * @param org the org

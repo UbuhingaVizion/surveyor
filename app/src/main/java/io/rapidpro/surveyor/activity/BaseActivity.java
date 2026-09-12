@@ -37,6 +37,7 @@ import io.rapidpro.surveyor.SurveyorApplication;
 import io.rapidpro.surveyor.SurveyorIntent;
 import io.rapidpro.surveyor.SurveyorPreferences;
 import io.rapidpro.surveyor.data.Org;
+import io.rapidpro.surveyor.data.TokenStore;
 import io.rapidpro.surveyor.ui.ViewCache;
 import io.rapidpro.surveyor.utils.OrgColors;
 
@@ -250,6 +251,9 @@ public abstract class BaseActivity extends AppCompatActivity {
 
         getSurveyor().clearPreference(SurveyorPreferences.AUTH_USERNAME);
         getSurveyor().setPreference(SurveyorPreferences.AUTH_ORGS, Collections.<String>emptySet());
+
+        // drop encrypted API tokens so they don't survive on a shared device
+        TokenStore.clear(this);
 
         try {
             getSurveyor().getSubmissionService().clearAll();

@@ -113,18 +113,6 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/create_account_link"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:gravity="center_horizontal"
-                android:onClick="onCreateAccount"
-                android:padding="10dp"
-                android:text="@string/create_account"
-                android:textColor="@color/primary_lightest"
-                android:textSize="18sp" />
-
         </LinearLayout>
 
 

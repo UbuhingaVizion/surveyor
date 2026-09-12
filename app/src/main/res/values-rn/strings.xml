@@ -3,7 +3,6 @@
 
     <!-- activity titles -->
     <string name="title_activity_login">Kwinjira</string>
-    <string name="title_activity_create_account">Gufungura konti nshasha</string>
     <string name="title_activity_org_choose">Hitamwo ishirahamwe</string>
     <string name="title_activity_org">Ishirahamwe</string>
     <string name="title_activity_flow">Amakuru ya Flow</string>

@@ -36,6 +36,9 @@ public class Logger {
     }
 
     public static void d(String message) {
-        Log.d(TAG, message);
+        // debug logs may contain survey data / UUIDs, so never emit them in release builds
+        if (BuildConfig.DEBUG) {
+            Log.d(TAG, message);
+        }
     }
 }
