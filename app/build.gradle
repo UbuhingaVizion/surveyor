@@ -1,8 +1,19 @@
 apply plugin: 'com.android.application'
 
-// load our keystore configuration
-def keystore = new Properties()
-keystore.load(new FileInputStream(rootProject.file("keystore.properties")))
+// Load the release signing configuration from keystore.properties if present, otherwise from
+// environment variables (CI secrets). keystore.properties is gitignored — never commit real
+// signing credentials. If nothing is configured, release builds are left unsigned so the project
+// still assembles for contributors without the key.
+def keystoreProps = new Properties()
+def keystorePropsFile = rootProject.file("keystore.properties")
+if (keystorePropsFile.exists()) {
+    keystorePropsFile.withInputStream { keystoreProps.load(it) }
+}
+def signingStoreFile = keystoreProps['storeFile'] ?: System.getenv('KEYSTORE_FILE')
+def signingStorePassword = keystoreProps['storePassword'] ?: System.getenv('KEYSTORE_STORE_PASSWORD')
+def signingKeyAlias = keystoreProps['keyAlias'] ?: System.getenv('KEYSTORE_KEY_ALIAS')
+def signingKeyPassword = keystoreProps['keyPassword'] ?: System.getenv('KEYSTORE_KEY_PASSWORD')
+def hasReleaseSigning = signingStoreFile && signingStorePassword && signingKeyAlias && signingKeyPassword
 
 android {
     compileSdk 36
@@ -32,10 +43,12 @@ android {
     }
     signingConfigs {
         release {
-            storeFile file(keystore['storeFile'])
-            storePassword keystore['storePassword']
-            keyAlias keystore['keyAlias']
-            keyPassword keystore['keyPassword']
+            if (hasReleaseSigning) {
+                storeFile file(signingStoreFile)
+                storePassword signingStorePassword
+                keyAlias signingKeyAlias
+                keyPassword signingKeyPassword
+            }
         }
     }
     buildTypes {
@@ -43,7 +56,9 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
         }
         debug {
         }
